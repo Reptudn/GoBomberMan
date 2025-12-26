@@ -1,32 +1,152 @@
-package client
+package main
 
 import tea "github.com/charmbracelet/bubbletea"
 
+type screen int
+
+const (
+	mainMenuScreen screen = iota
+	createGameScreen
+	joinGameScreen
+)
+
 type model struct {
-	choices  []string         // items on the to-do list
-	cursor   int              // which to-do list item our cursor is pointing at
-	selected map[int]struct{} // which to-do items are selected
+	screen  screen   // current screen
+	choices []string // menu options
+	cursor  int      // which menu item our cursor is pointing at
 }
 
 // Update implements [tea.Model].
-func (m model) Update(tea.Msg) (tea.Model, tea.Cmd) {
-	panic("unimplemented")
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch m.screen {
+	case mainMenuScreen:
+		return m.updateMainMenu(msg)
+	case createGameScreen:
+		return m.updateCreateGame(msg)
+	case joinGameScreen:
+		return m.updateJoinGame(msg)
+	}
+	return m, nil
+}
+
+func (m model) updateMainMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c":
+			return m, tea.Quit
+		case "up":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+		case "down":
+			if m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+		case "enter":
+			switch m.cursor {
+			case 0: // Create Game
+				m.screen = createGameScreen
+				m.cursor = 0
+				return m, nil
+			case 1: // Join Game
+				m.screen = joinGameScreen
+				m.cursor = 0
+				return m, nil
+			case 2: // Exit
+				return m, tea.Quit
+			}
+		}
+	}
+	return m, nil
+}
+
+func (m model) updateCreateGame(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c":
+			return m, tea.Quit
+		case "esc":
+			// Go back to main menu
+			m.screen = mainMenuScreen
+			m.cursor = 0
+			m.choices = []string{"Create Game", "Join Game", "Exit"}
+			return m, nil
+		}
+	}
+	return m, nil
+}
+
+func (m model) updateJoinGame(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c":
+			return m, tea.Quit
+		case "esc":
+			// Go back to main menu
+			m.screen = mainMenuScreen
+			m.cursor = 0
+			m.choices = []string{"Create Game", "Join Game", "Exit"}
+			return m, nil
+		}
+	}
+	return m, nil
 }
 
 // View implements [tea.Model].
 func (m model) View() string {
-	panic("unimplemented")
+	switch m.screen {
+	case mainMenuScreen:
+		return m.viewMainMenu()
+	case createGameScreen:
+		return m.viewCreateGame()
+	case joinGameScreen:
+		return m.viewJoinGame()
+	}
+	return ""
+}
+
+func (m model) viewMainMenu() string {
+	s := "╔══════════════════════════════════╗\n"
+	s += "║     Welcome to StackItManGO!     ║\n"
+	s += "╚══════════════════════════════════╝\n\n"
+
+	for i, choice := range m.choices {
+		cursor := "  "
+		if m.cursor == i {
+			cursor = "► "
+		}
+		s += cursor + choice + "\n"
+	}
+
+	s += "\n(↑/↓, enter to select)\n"
+	return s
+}
+
+func (m model) viewCreateGame() string {
+	s := "╔══════════════════════════════════╗\n"
+	s += "║         Create New Game          ║\n"
+	s += "╚══════════════════════════════════╝\n\n"
+	s += "Game creation screen goes here...\n\n"
+	s += "(esc to go back)\n"
+	return s
+}
+
+func (m model) viewJoinGame() string {
+	s := "╔══════════════════════════════════╗\n"
+	s += "║           Join Game              ║\n"
+	s += "╚══════════════════════════════════╝\n\n"
+	s += "Join game screen goes here...\n\n"
+	s += "(esc to go back)\n"
+	return s
 }
 
 func initialModel() model {
 	return model{
-		// Our to-do list is a grocery list
-		choices: []string{"Buy carrots", "Buy celery", "Buy kohlrabi"},
-
-		// A map which indicates which choices are selected. We're using
-		// the  map like a mathematical set. The keys refer to the indexes
-		// of the `choices` slice, above.
-		selected: make(map[int]struct{}),
+		screen:  mainMenuScreen,
+		choices: []string{"Create Game", "Join Game", "Exit"},
 	}
 }
 
