@@ -1,4 +1,4 @@
-package shared
+package main
 
 type action struct {
 	Type string      `json:"type"`

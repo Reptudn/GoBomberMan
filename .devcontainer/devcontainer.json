@@ -27,7 +27,7 @@
   },
 
   "postCreateCommand": "find . -name 'go.mod' -execdir go mod download \\;",
-  "postStartCommand": "minikube start --driver=docker || echo 'Minikube already running!'",
+  "postStartCommand": "chmod +x .devcontainer/kubernetes_init.sh && .devcontainer/kubernetes_init.sh",
 
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"

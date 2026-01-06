@@ -1,20 +1,36 @@
 package main
 
 import (
+	"bomberman-backend/routes"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-type game struct {
-	ID   string
-	Name string
-}
 
-var games = []game{};
 
 func main() {
 	fmt.Println("Starting Backend Server...")
+
+	// Try KUBECONFIG env var first, then fall back to workspace config
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		kubeconfig = filepath.Join("..", "kubernetes", "config.yaml")
+	}
+	
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	kubeClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	r := gin.Default()
 
@@ -24,23 +40,13 @@ func main() {
 		})
 	})
 
-	r.GET("/list-games", func(c *gin.Context) {
-		c.String(200, "Welcome to the Backend Server!")
-	})
+	r.GET("/list-games", routes.ListGames)
 
 	r.POST("/create-game", func(c *gin.Context) {
-		var newGame game
-		if err := c.BindJSON(&newGame); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		games = append(games, newGame)
-		c.JSON(200, gin.H{"status": "game created", "game": newGame})
+		routes.CreateGame(c, kubeClient)
 	})
 
-	r.POST("join-game", func(ctx *gin.Context) {
-		
-	})
+	r.POST("/join-game", routes.JoinGame)
 
 	r.Run()
 }
