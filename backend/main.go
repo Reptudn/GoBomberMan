@@ -15,8 +15,8 @@ func main() {
 	fmt.Println("Starting Backend Server...")
 
 	// Try KUBECONFIG env var first, then fall back to workspace config
-	kubeconfig := os.Getenv("KUBECONFIG")
-	if kubeconfig == "" {
+	kubeconfig, exists := os.LookupEnv("KUBECONFIG")
+	if !exists || kubeconfig == "" {
 		kubeconfig = filepath.Join("..", "kubernetes", "config.yaml")
 	}
 

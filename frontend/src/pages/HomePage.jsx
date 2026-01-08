@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import "./HomePage.css";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -29,11 +30,13 @@ function HomePage() {
 
   return (
     <div className="menu">
-      <h1>Bomberman</h1>
-      <button onClick={() => handleCreateGame()}>Create Game</button>
-      <button onClick={() => handleJoinGame()}>Join Game</button>
-      <button onClick={() => navigate("/lobbies")}>Browse Lobbies</button>
-      <button onClick={() => navigate("/about")}>About</button>
+      <h1>B💣mberman</h1>
+      <div className="menu-buttons">
+        <button onClick={() => handleCreateGame()}>Create Game</button>
+        <button onClick={() => handleJoinGame()}>Join Game</button>
+        <button onClick={() => navigate("/lobbies")}>Browse Lobbies</button>
+        <button onClick={() => navigate("/about")}>About</button>
+      </div>
     </div>
   );
 }
