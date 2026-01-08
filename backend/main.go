@@ -11,8 +11,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-
-
 func main() {
 	fmt.Println("Starting Backend Server...")
 
@@ -21,7 +19,7 @@ func main() {
 	if kubeconfig == "" {
 		kubeconfig = filepath.Join("..", "kubernetes", "config.yaml")
 	}
-	
+
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		panic(err.Error())
@@ -40,13 +38,17 @@ func main() {
 		})
 	})
 
-	r.GET("/list-games", routes.ListGames)
+	r.GET("/list-games", func(c *gin.Context) {
+		routes.ListGames(c, kubeClient)
+	})
 
 	r.POST("/create-game", func(c *gin.Context) {
 		routes.CreateGame(c, kubeClient)
 	})
 
-	r.POST("/join-game", routes.JoinGame)
+	r.POST("/join-game", func(c *gin.Context) {
+		routes.JoinGame(c, kubeClient)
+	})
 
 	r.Run()
 }
