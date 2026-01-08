@@ -16,4 +16,6 @@ cd frontend
 npm run dev
 ```
 
+> PS: The devcontainer is not yet tested and might not work at all :D
+
 Have fun lol!
