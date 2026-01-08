@@ -1,0 +1,101 @@
+# Deployment for the backend (manager node)
+# This defines how the backend application should run in Kubernetes
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: default
+  labels:
+    app: backend
+spec:
+  # Number of backend instances to run
+  # Start with 1, can scale up later if needed
+  replicas: 1
+
+  # Selector tells Kubernetes which pods belong to this deployment
+  selector:
+    matchLabels:
+      app: backend
+
+  # Template defines what each pod should look like
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      # Use the service account we created in backend-rbac.yaml
+      # This gives the backend permission to create game server pods
+      serviceAccountName: backend-sa
+
+      containers:
+        - name: backend
+          # Use the locally built Docker image
+          image: go-bomberman-backend:latest
+
+          # CRITICAL: Never pull from registry, use local image only
+          # This is essential for Docker Desktop Kubernetes with local images
+          imagePullPolicy: Never
+
+          # The port the backend listens on (from your main.go: r.Run() defaults to 8080)
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+
+          # Environment variables for the backend
+          env:
+            - name: GIN_MODE
+              value: "release" # Run Gin in production mode
+
+          # Health checks to ensure the backend is running properly
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          # Resource limits (adjust based on your needs)
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+# Service exposes the backend to the outside world
+# This makes the backend accessible at localhost:8080 on Docker Desktop
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: default
+  labels:
+    app: backend
+spec:
+  # LoadBalancer type works with Docker Desktop and exposes on localhost
+  # Alternative: NodePort if you want to specify a specific port
+  type: LoadBalancer
+
+  # Route traffic to pods with the label app=backend
+  selector:
+    app: backend
+
+  ports:
+    - protocol: TCP
+      port: 8080 # Port exposed by the service
+      targetPort: 8080 # Port on the backend pod
+      name: http

@@ -10,7 +10,7 @@ import (
 
 type GameInfo struct {
 	Name           string `json:"name"`
-	ID             string `json:"id"`
+	GameId         string `json:"gameId"`
 	CurrentPlayers int    `json:"currentPlayers"`
 	MaxPlayers     int    `json:"maxPlayers"`
 }
@@ -36,9 +36,13 @@ func ListGames(c *gin.Context, kubeClient kubernetes.Interface) {
 		gameInfo.CurrentPlayers = 0 // Placeholder for actual player count logic
 		gameInfo.MaxPlayers = 4     // Assuming max players is 4 for all games
 		gameInfo.Name = pod.Name
-		gameInfo.ID = pod.Labels["gameId"]
+		gameInfo.GameId = pod.Labels["gameId"]
 
-		games = append(games, gameInfo)
+		// TODO: Implement logic to fetch current player count from pod status
+		// TODO: Only add the game to the array when the container is ready
+		if pod.Status.Phase == "Running" {
+			games = append(games, gameInfo)
+		}
 	}
 
 	c.JSON(200, gin.H{

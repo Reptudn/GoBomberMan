@@ -1,0 +1,53 @@
+# Service Account for the backend
+# This creates an identity for the backend pod to use when talking to the Kubernetes API
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: default
+
+---
+# Role defines what permissions the backend has within the namespace
+# This tells Kubernetes what actions the backend is allowed to perform
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backend-role
+  namespace: default
+rules:
+  # Permissions for managing pods
+  # The backend needs these to create game server pods dynamically
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Permissions for managing services
+  # The backend needs these to expose game servers to players
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Permissions for managing deployments
+  # If you want to create game servers as deployments instead of raw pods
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+# RoleBinding connects the ServiceAccount to the Role
+# This is what actually gives the backend-sa the permissions defined in backend-role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backend-rolebinding
+  namespace: default
+subjects:
+  # Who gets the permissions (the service account)
+  - kind: ServiceAccount
+    name: backend-sa
+    namespace: default
+roleRef:
+  # What permissions they get (the role we defined above)
+  kind: Role
+  name: backend-role
+  apiGroup: rbac.authorization.k8s.io

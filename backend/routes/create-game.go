@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -29,13 +30,43 @@ func CreateGame(c *gin.Context, kubeClient kubernetes.Interface) {
 
 	fmt.Printf("Game service created for game %s on port %d\n", gameId, servicePort)
 
+	fmt.Printf("Waiting for game server pod to be ready...\n")
+	ready := waitForPodReady(gameId, kubeClient, 30*time.Second)
+
+	if !ready {
+		fmt.Printf("Warning: Pod not ready yet, but returning connection info anyway\n")
+	} else {
+		fmt.Printf("Game server pod is ready!\n")
+	}
+
 	c.JSON(200, gin.H{
 		"status":      "Game created successfully",
 		"gameId":      gameId,
-		"socketUrl":   fmt.Sprintf("ws://%s:%d/ws", "localhost", servicePort),
+		"url":         fmt.Sprintf("%s:%d", "localhost", servicePort),
 		"servicePort": servicePort,
 	})
 
+}
+
+func waitForPodReady(gameId string, kubeClient kubernetes.Interface, timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	podName := fmt.Sprintf("game-server-%s", gameId)
+
+	for time.Now().Before(deadline) {
+		pod, err := kubeClient.CoreV1().Pods("default").Get(context.TODO(), podName, metav1.GetOptions{})
+		if err == nil {
+			// Check if pod is ready
+			for _, condition := range pod.Status.Conditions {
+				if condition.Type == corev1.PodReady && condition.Status == corev1.ConditionTrue {
+					return true
+				}
+			}
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return false
 }
 
 func createGameService(gameId string, kubeClient kubernetes.Interface) (int32, error) {
@@ -89,12 +120,25 @@ func createGamePod(gameId string, kubeClient kubernetes.Interface) error {
 			Containers: []corev1.Container{
 				{
 					Name:            "game-container",
-					Image:           "bomberman-game-image:latest",
+					Image:           "go-bomberman-game-server:latest",
 					ImagePullPolicy: corev1.PullNever,
 					Ports: []corev1.ContainerPort{
 						{
 							ContainerPort: 8080,
 						},
+					},
+					ReadinessProbe: &corev1.Probe{
+						ProbeHandler: corev1.ProbeHandler{
+							HTTPGet: &corev1.HTTPGetAction{
+								Path: "/health",
+								Port: intstr.FromInt(8080),
+							},
+						},
+						InitialDelaySeconds: 2,
+						PeriodSeconds:       2,
+						TimeoutSeconds:      1,
+						SuccessThreshold:    1,
+						FailureThreshold:    3,
 					},
 				},
 			},

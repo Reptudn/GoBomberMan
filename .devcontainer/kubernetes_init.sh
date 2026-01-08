@@ -27,3 +27,5 @@ else
 	echo "minikube kubeconfig not found at $HOME/.kube/config; did minikube start succeed?" >&2
 	exit 1
 fi
+
+# TODO: in devcontainer add the images once builded to minikube

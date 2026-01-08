@@ -1,31 +1,39 @@
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../App.jsx";
+import "./LobbyItem.css";
 
-export default function LobbyItem(name, id, currentPlayer, maxPlayers) {
+export default function LobbyItem({ name, id, currentPlayers, maxPlayers }) {
   const navigate = useNavigate();
 
   const handleLobbyClick = async () => {
     console.log(`Clicked on lobby ${id}`);
 
-    const res = await fetch(`/api/join-game/${id}`);
+    const res = await fetch(`${API_URL}/join-game/${id}`, {
+      method: "POST",
+    });
 
     if (!res.ok) {
-      alert("Failed to join the game");
+      const data = await res.json();
+      alert("Failed to join the game: ", data.status);
       return;
     }
 
     const data = await res.json();
 
+    const url = data.url;
+    const gameId = data.gameId;
+
     navigate("/game", {
-      state: { gameId: data.gameId, socketUrl: data.socketUrl },
+      state: { gameId: gameId, url: url },
     });
   };
 
   return (
-    <div onClick={() => handleLobbyClick()}>
-      <h2>{name}</h2>
-      <p>ID: {id}</p>
+    <div onClick={() => handleLobbyClick()} className="lobby-item">
+      <h2>{name || "N/A"}</h2>
+      <p>ID: {id || "N/A"}</p>
       <p>
-        Players: {currentPlayer}/{maxPlayers}
+        Players: {currentPlayers || "N/A"}/{maxPlayers || "N/A"}
       </p>
     </div>
   );

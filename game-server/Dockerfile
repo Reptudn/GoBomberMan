@@ -7,15 +7,15 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o game-server ./backend/main.go
+RUN go build -o game-server .
 
 FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
-WORKDIR /root/
+WORKDIR /app
 
 COPY --from=builder /app/game-server .
 
 EXPOSE 8080
 
-ENTRYPOINT [ "./game-server" ]
+ENTRYPOINT [ "/app/game-server" ]
