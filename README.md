@@ -1,4 +1,5 @@
 ## This project is there for me to learn Kubernetes Deployment and Golang.
+> THERE IS NO GAME YET AS OF THIS POINT!
 
 - Backend and Game Server written in Go
 - Frontent UI written in React
