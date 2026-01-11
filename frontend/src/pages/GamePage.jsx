@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -12,13 +13,23 @@ function GamePage() {
   const maxRetries = 10;
 
   const { url, gameId } = location.state || {};
-
-  let wsUrl = `ws://${url}/ws`;
+  const wsUrl = useMemo(() => {
+    if (!url) return null;
+    return `ws://${url}/ws`;
+  }, [url]);
 
   useEffect(() => {
-    if (!wsUrl || !gameId) {
+    if (!url || !gameId) {
       alert("Missing wsUrl or gameId");
       navigate("/");
+      return;
+    }
+
+    if (
+      socketRef.current?.readyState === WebSocket.OPEN ||
+      socketRef.current?.readyState === WebSocket.CONNECTING
+    ) {
+      console.log("Socket already exists, skipping connection");
       return;
     }
 
@@ -83,14 +94,21 @@ function GamePage() {
         socket.close(1000); // Normal closure
       }
     };
-  }, [wsUrl, gameId]);
+  }, [wsUrl, gameId, navigate]);
 
   if (!gameId) {
     return (
       <div>
         <h1>Game Page</h1>
         <p>No Game Id</p>
-        <button onClick={() => navigate("/")}>Go Home</button>
+        <button
+          onClick={() => {
+            socketRef.current?.close(1000);
+            navigate("/");
+          }}
+        >
+          Go Home
+        </button>
       </div>
     );
   }
@@ -98,7 +116,7 @@ function GamePage() {
   return (
     <div>
       <h1>Game Page</h1>
-      <h3>WebSocket URL: {wsUrl || "Not Available"}</h3>
+      <h3>WebSocket URL: {url || "Not Available"}</h3>
       <h3>
         WebSocket Status:{" "}
         {isConnected === "connected"
@@ -124,15 +142,18 @@ function GamePage() {
       <p>Joining Game ID: {gameId}</p>
       <button
         onClick={() => {
-          if (socketRef.current.state === WebSocket.OPEN) {
-            socketRef.current.close(1000);
-          }
+          socketRef.current?.close(1000);
           navigate("/");
         }}
       >
         Go Home
       </button>
-      <button onClick={() => socketRef.current?.send("Hello")}>
+      <button
+        onClick={() => {
+          const msg = prompt("Enter message");
+          socketRef.current?.send(msg || "Hallo");
+        }}
+      >
         Send Message
       </button>
     </div>

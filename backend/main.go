@@ -60,7 +60,7 @@ func main() {
 
 	r.Use(CORSMiddleware())
 
-	r.GET("/ping", func(c *gin.Context) {
+	r.GET("/status", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
@@ -78,5 +78,6 @@ func main() {
 		routes.JoinGame(c, kubeClient)
 	})
 
+	fmt.Println("Backend Server started")
 	r.Run()
 }

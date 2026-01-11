@@ -8,7 +8,7 @@ export default function LobbyPage() {
   const [lobbies, setLobbies] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const getGames = () => {
     fetch(`${API_URL}/list-games`)
       .then((response) => response.json())
       .then((data) => {
@@ -16,6 +16,10 @@ export default function LobbyPage() {
         console.log(data);
       })
       .catch((error) => alert("Error fetching lobbies:", error));
+  };
+
+  useEffect(() => {
+    getGames();
   }, []);
 
   return (
@@ -34,6 +38,7 @@ export default function LobbyPage() {
       >
         <h1>Lobbies Page</h1>
         <button onClick={() => navigate("/")}>Go Back</button>
+        <button onClick={() => getGames()}>Refresh</button>
       </div>
       {lobbies.length > 0 ? (
         lobbies.map((lobby) => (

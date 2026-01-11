@@ -1,12 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import "./HomePage.css";
 import { API_URL } from "../App";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(false);
+  const [serverOnline, setServerOnline] = useState(false);
 
   const handleCreateGame = async () => {
     try {
@@ -66,9 +67,32 @@ function HomePage() {
     }, 500);
   };
 
+  useEffect(() => {
+    return () => {
+      console.log("Cleanup");
+    };
+    const checkServerStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/ping`);
+        if (response.ok) {
+          setServerOnline(true);
+        } else {
+          setServerOnline(false);
+        }
+      } catch {
+        setServerOnline(false);
+      }
+    };
+
+    setInterval(async () => {
+      if (!serverOnline) await checkServerStatus();
+    }, 1000);
+  }, [serverOnline]);
+
   return (
     <div className="menu">
       <h1>B💣mberman</h1>
+      {serverOnline ? <p>Server is online</p> : <p>Server is offline</p>}
       {loading ? (
         <p>{loadingMessage}</p>
       ) : (
