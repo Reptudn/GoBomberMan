@@ -19,6 +19,10 @@ const TicksPerSecond = 20
 var CurrentGameState GameState = GameStateWaiting
 var gameWasStarted bool = false
 
+func GetGameWasStarted() bool {
+	return gameWasStarted
+}
+
 var PlayingField *shared.Field
 
 func initializeGame(width, height int) {

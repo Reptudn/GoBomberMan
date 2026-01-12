@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bomberman-game-server/game"
 	networking "bomberman-game-server/networking"
+	"bomberman-game-server/shared"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -36,6 +39,22 @@ func main() {
 		serverReady = true
 		fmt.Println("Server ready")
 	}()
+
+	// This stops the game when nobody is connected and the game was never started
+	idleChecker := time.NewTicker(30 * time.Second)
+	go func(startTime time.Time) {
+		defer idleChecker.Stop()
+
+		for range idleChecker.C {
+			uptime := time.Since(startTime)
+			log.Printf("Server uptime: %s", uptime.String())
+			if uptime > 2*time.Minute && len(shared.Players) == 0 && !game.GetGameWasStarted() {
+				log.Println("No players connected and game not started for 2 minutes. Shutting down server.")
+				os.Exit(0)
+			}
+		}
+
+	}(startTime)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
