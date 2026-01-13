@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -8,6 +10,21 @@ import (
 
 var PlayersMutex sync.RWMutex
 var Players = make(map[int]*Player)
+
+func playersAsJSON() string {
+	var builder strings.Builder
+	builder.WriteString("[")
+	index := 0
+	for _, player := range Players {
+		if index > 0 {
+			builder.WriteString(",")
+		}
+		builder.WriteString(player.ToJSON())
+		index++
+	}
+	builder.WriteString("]")
+	return builder.String()
+}
 
 type Player struct {
 	ID   int
@@ -25,6 +42,12 @@ type Player struct {
 	MaxBombCount     int
 	Bomb             Bomb
 	WantsToPlaceBomb bool
+}
+
+func (p *Player) ToJSON() string {
+	return `{"id":` + strconv.Itoa(p.ID) +
+		`,"color":"` + p.Color +
+		`","pos":` + p.Pos.ToJSON() + `}`
 }
 
 type Bomb struct {

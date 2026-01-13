@@ -28,7 +28,7 @@ func BroadcastMessage(msgType string, message string) {
 func BroadcastGameState(field *Field) {
 	fmt.Println("Broadcasting game state...")
 	fmt.Println("Game state:", Players, field)
-	BroadcastMessage("game_state", fmt.Sprintf(`{"players": %v, "field": %v}`, Players, field))
+	BroadcastMessage("game_state", fmt.Sprintf(`{"players": %s, "field": %s}`, playersAsJSON(), field.ToJSON()))
 }
 
 func SendMessageToClientByID(clientID int, msgType string, message string) {

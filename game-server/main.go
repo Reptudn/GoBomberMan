@@ -13,6 +13,22 @@ import (
 
 var serverReady bool = false
 
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
 func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	_ = r
 	if serverReady {
@@ -31,8 +47,8 @@ func main() {
 	startTime = time.Now()
 	fmt.Println("Game Server started on :8080")
 
-	http.HandleFunc("/ws", networking.HandleWebSocket)
-	http.HandleFunc("/health", handleHealthCheck)
+	http.HandleFunc("/ws", corsMiddleware(networking.HandleWebSocket))
+	http.HandleFunc("/health", corsMiddleware(handleHealthCheck))
 
 	go func() {
 		time.Sleep(2 * time.Second)

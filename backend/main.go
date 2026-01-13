@@ -12,12 +12,23 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+var allowedOrigins = []string{
+	"http://localhost:5173",
+}
+
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+
+		origin := c.Request.Header.Get("Origin")
+		for _, allowedOrigin := range allowedOrigins {
+			if origin == allowedOrigin {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+				break
+			}
+		}
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -57,10 +68,9 @@ func main() {
 	}
 
 	r := gin.Default()
-
 	r.Use(CORSMiddleware())
 
-	r.GET("/status", func(c *gin.Context) {
+	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
@@ -78,6 +88,6 @@ func main() {
 		routes.JoinGame(c, kubeClient)
 	})
 
-	fmt.Println("Backend Server started")
-	r.Run()
+	fmt.Println("Backend Server started on port 8080")
+	r.Run(":8080")
 }

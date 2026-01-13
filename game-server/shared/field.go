@@ -1,6 +1,9 @@
 package shared
 
-import "sync"
+import (
+	"strconv"
+	"sync"
+)
 
 type CellType int
 
@@ -21,10 +24,33 @@ type Cell struct {
 	PowerUp *PowerUp // only when CellPowerUp
 }
 
+func (c *Cell) ToJSON() string {
+	return `{"type":` + strconv.Itoa(int(c.Type)) + `}`
+}
+
 type Field struct {
 	Width, Height int
 	Cells         [][]Cell
 	mutex         sync.RWMutex
+}
+
+func (f *Field) cellsToJSON() string {
+	cellsJSON := ""
+	for y := 0; y < f.Height; y++ {
+		for x := 0; x < f.Width; x++ {
+			cellsJSON += f.Cells[y][x].ToJSON()
+			if x < f.Width-1 || y < f.Height-1 {
+				cellsJSON += ","
+			}
+		}
+	}
+	return cellsJSON
+}
+
+func (f *Field) ToJSON() string {
+	return `{"width":` + strconv.Itoa(f.Width) +
+		`,"height":` + strconv.Itoa(f.Height) +
+		`,"cells":[` + f.cellsToJSON() + `]}`
 }
 
 func (f *Field) isValidPos(x, y int, width, height int) bool {

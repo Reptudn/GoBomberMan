@@ -1,7 +1,13 @@
 package shared
 
+import "strconv"
+
 type Pos struct {
 	X, Y int
+}
+
+func (pos *Pos) ToJSON() string {
+	return `{"x":` + strconv.Itoa(pos.X) + `,"y":` + strconv.Itoa(pos.Y) + `}`
 }
 
 // In this program this is an empty position or a none position
