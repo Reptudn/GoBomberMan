@@ -17,6 +17,8 @@ function HomePage() {
 
       if (!res.ok) {
         alert("Failed to create a game");
+        setLoading(false);
+        setLoadingMessage("");
         return;
       }
 
@@ -33,6 +35,8 @@ function HomePage() {
     } catch (error) {
       console.error("Error creating game:", error);
       alert("Failed to create a game");
+      setLoading(false);
+      setLoadingMessage("");
     }
   };
 
@@ -67,27 +71,24 @@ function HomePage() {
     }, 500);
   };
 
-  useEffect(() => {
-    return () => {
-      console.log("Cleanup");
-    };
-    const checkServerStatus = async () => {
-      try {
-        const response = await fetch(`${API_URL}/ping`);
-        if (response.ok) {
-          setServerOnline(true);
-        } else {
-          setServerOnline(false);
-        }
-      } catch {
-        setServerOnline(false);
-      }
-    };
+  // useEffect(() => {
+  //   const checkServerStatus = async () => {
+  //     try {
+  //       const response = await fetch(`${API_URL}/ping`);
+  //       if (response.ok) {
+  //         setServerOnline(true);
+  //       } else {
+  //         setServerOnline(false);
+  //       }
+  //     } catch {
+  //       setServerOnline(false);
+  //     }
+  //   };
 
-    setInterval(async () => {
-      if (!serverOnline) await checkServerStatus();
-    }, 1000);
-  }, [serverOnline]);
+  //   setInterval(async () => {
+  //     if (!serverOnline) await checkServerStatus();
+  //   }, 1000);
+  // }, [serverOnline]);
 
   return (
     <div className="menu">
@@ -116,7 +117,7 @@ function HomePage() {
             Join Game
           </button>
           <button onClick={() => navigate("/lobbies")}>Browse Lobbies</button>
-          <button onClick={() => navigate("/about")}>About</button>
+          <p>by jkauker</p>
         </div>
       )}
     </div>

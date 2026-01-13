@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import GameField from "../components/game/GameField";
+import Chat from "../components/game/Chat";
 
 function GamePage() {
   const navigate = useNavigate();
@@ -8,6 +10,8 @@ function GamePage() {
 
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState("connecting");
+  const [gameRunning, setGameRunning] = useState(false);
+  const [gameData, setGameData] = useState(null);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 10;
@@ -77,6 +81,28 @@ function GamePage() {
 
     socket.onmessage = (event) => {
       console.log("Socket message: ", event.data);
+      const data = JSON.parse(event.data);
+
+      switch (data.type) {
+        case "game_state":
+          setGameData(data.message);
+          break;
+        case "game_start":
+          setGameRunning(true);
+          setError(null);
+          break;
+        case "game_end":
+          setGameRunning(false);
+          break;
+        case "chat":
+          console.log("Chat message: ", data.message);
+          break;
+        case "error":
+          setError(data.message || "Unknown error from server");
+          break;
+        default:
+          console.log("Unknown message type: ", data.type);
+      }
     };
 
     socket.onopen = () => {
@@ -91,10 +117,49 @@ function GamePage() {
       clearTimeout(connectionTimeout);
       console.log("Cleaning up socket");
       if (socket.readyState === WebSocket.OPEN) {
-        socket.close(1000); // Normal closure
+        socket.close(1000);
       }
     };
   }, [wsUrl, gameId, navigate]);
+
+  useEffect(() => {
+    if (!gameRunning) return;
+
+    const handleKeyPress = (e) => {
+      switch (e.key) {
+        case "ArrowUp":
+          socketRef.current?.send(
+            JSON.stringify({ type: "move", direction: "up" }),
+          );
+          break;
+        case "ArrowDown":
+          socketRef.current?.send(
+            JSON.stringify({ type: "move", direction: "down" }),
+          );
+          break;
+        case "ArrowLeft":
+          socketRef.current?.send(
+            JSON.stringify({ type: "move", direction: "left" }),
+          );
+          break;
+        case "ArrowRight":
+          socketRef.current?.send(
+            JSON.stringify({ type: "move", direction: "right" }),
+          );
+          break;
+        case "Space":
+          socketRef.current?.send(JSON.stringify({ type: "place_bomb" }));
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [gameRunning]);
 
   if (!gameId) {
     return (
@@ -139,6 +204,8 @@ function GamePage() {
           <strong>Status:</strong> {error}
         </div>
       )}
+      {gameRunning && <GameField fieldData={gameData.field || {}} />}
+      <Chat socket={socketRef} />
       <p>Joining Game ID: {gameId}</p>
       <button
         onClick={() => {
