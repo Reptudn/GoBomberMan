@@ -11,7 +11,8 @@ function GamePage() {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState("connecting");
   const [gameRunning, setGameRunning] = useState(false);
-  const [gameData, setGameData] = useState(null);
+  const [fieldData, setFieldData] = useState({});
+  const [playersData, setPlayersData] = useState({});
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 10;
@@ -81,13 +82,15 @@ function GamePage() {
     };
 
     socket.onmessage = (event) => {
-      console.log("Socket message: ", event.data);
       const data = JSON.parse(event.data);
+      console.log("Socket message: ", data);
 
       switch (data.type) {
         case "game_state":
-          console.log("game state update", data);
-          setGameData(data.message);
+          console.log("game state field", data.message.field);
+          console.log("game state players", data.message.players);
+          setFieldData(data.message.field);
+          setPlayersData(data.message.players);
           break;
         case "game_start":
           setGameRunning(true);
@@ -210,10 +213,10 @@ function GamePage() {
         </div>
       )}
       {gameRunning ? (
-        <GameField
-          fieldData={gameData.field || {}}
-          players={gameData.players || {}}
-        />
+        <>
+          <GameField fieldData={fieldData || {}} players={playersData || {}} />
+          <p>Game ID: {gameId}</p>
+        </>
       ) : (
         <p>Waiting for game to start...</p>
       )}

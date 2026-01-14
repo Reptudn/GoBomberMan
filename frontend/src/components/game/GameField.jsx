@@ -1,4 +1,7 @@
 export default function GameField({ fieldData, players }) {
+  if (!fieldData || !players)
+    return <p>No game field and player data available</p>;
+
   const getCellColor = (cell) => {
     if (!cell.type) return "lightgray";
     switch (cell.type) {
@@ -32,7 +35,7 @@ export default function GameField({ fieldData, players }) {
           gap: "2px",
         }}
       >
-        {fieldData.cells.flat().map((cell, index) => (
+        {fieldData.cells.map((cell, index) => (
           <div
             key={index}
             className="game-cell"
