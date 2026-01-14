@@ -6,38 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
-
-var allowedOrigins = []string{
-	"http://localhost:5173",
-}
-
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-
-		origin := c.Request.Header.Get("Origin")
-		for _, allowedOrigin := range allowedOrigins {
-			if origin == allowedOrigin {
-				c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-				break
-			}
-		}
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	}
-}
 
 func main() {
 	fmt.Println("Starting Backend Server...")
@@ -67,27 +41,47 @@ func main() {
 		panic(err.Error())
 	}
 
-	r := gin.Default()
-	r.Use(CORSMiddleware())
+	e := echo.New()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
+	isProd := os.Getenv("ENV") == "production"
+
+	if isProd {
+		e.Debug = false
+		e.HideBanner = true
+		e.HidePort = true
+	} else {
+		e.Debug = true
+		e.Use(middleware.RequestLogger())
+	}
+
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{echo.GET, echo.POST, echo.OPTIONS},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+			"Content-Length", "Accept-Encoding", "X-CSRF-Token", "Cache-Control", "X-Requested-With",
+		},
+		AllowCredentials: true,
+	}))
+
+	e.GET("/ping", routes.Ping)
+
+	e.GET("/list-games", func(c echo.Context) error {
+		return routes.ListGames(c, kubeClient)
 	})
 
-	r.GET("/list-games", func(c *gin.Context) {
-		routes.ListGames(c, kubeClient)
+	e.POST("/create-game", func(c echo.Context) error {
+		return routes.CreateGame(c, kubeClient)
 	})
 
-	r.POST("/create-game", func(c *gin.Context) {
-		routes.CreateGame(c, kubeClient)
-	})
-
-	r.POST("/join-game/:gameId", func(c *gin.Context) {
-		routes.JoinGame(c, kubeClient)
+	e.POST("/join-game/:gameId", func(c echo.Context) error {
+		return routes.JoinGame(c, kubeClient)
 	})
 
 	fmt.Println("Backend Server started on port 8080")
-	r.Run(":8080")
+	e.Logger.Fatal(e.Start(":8080"))
 }

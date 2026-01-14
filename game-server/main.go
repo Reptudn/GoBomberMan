@@ -58,7 +58,7 @@ func main() {
 
 	// This stops the game when nobody is connected and the game was never started
 	idleChecker := time.NewTicker(30 * time.Second)
-	go func(startTime time.Time) {
+	go func() {
 		defer idleChecker.Stop()
 
 		for range idleChecker.C {
@@ -70,7 +70,7 @@ func main() {
 			}
 		}
 
-	}(startTime)
+	}()
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

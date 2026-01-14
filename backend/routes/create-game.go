@@ -7,25 +7,24 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
-func CreateGame(c *gin.Context, kubeClient kubernetes.Interface) {
+func CreateGame(c echo.Context, kubeClient kubernetes.Interface) error {
 
 	gameId := uuid.New().String()
 
 	if err := createGamePod(gameId, kubeClient); err != nil {
-		c.JSON(500, gin.H{"status": "error creating game pod"})
-		return
+		return c.JSON(500, gin.H{"status": "error creating game pod"})
 	}
 
 	servicePort, err := createGameService(gameId, kubeClient)
 	if err != nil {
-		c.JSON(500, gin.H{"status": "error creating game service"})
-		return
+		return c.JSON(500, gin.H{"status": "error creating game service"})
 	}
 
 	fmt.Printf("Game service created for game %s on port %d\n", gameId, servicePort)
@@ -39,7 +38,7 @@ func CreateGame(c *gin.Context, kubeClient kubernetes.Interface) {
 		fmt.Printf("Game server pod is ready!\n")
 	}
 
-	c.JSON(200, gin.H{
+	return c.JSON(200, map[string]interface{}{
 		"status":      "Game created successfully",
 		"gameId":      gameId,
 		"url":         fmt.Sprintf("%s:%d", "localhost", servicePort),

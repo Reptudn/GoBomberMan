@@ -5,6 +5,6 @@ import (
 )
 
 func handleChat(action *shared.ChatData) error {
-	shared.BroadcastMessage("chat", action.Message)
+	shared.BroadcastMessage("chat", action.Message, false)
 	return nil
 }

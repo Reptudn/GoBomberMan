@@ -44,8 +44,8 @@ spec:
 
           # Environment variables for the backend
           env:
-            - name: GIN_MODE
-              value: "release" # Run Gin in production mode
+            - name: ENV
+              value: "production"
 
           # Health checks to ensure the backend is running properly
           livenessProbe:

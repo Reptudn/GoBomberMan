@@ -3,6 +3,7 @@ package game
 import (
 	"bomberman-game-server/shared"
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -45,15 +46,22 @@ func initializeGame(width, height int) {
 
 func StartGame() error {
 	if gameWasStarted {
+		fmt.Println("Game already started.")
 		return fmt.Errorf("Game already started")
 	}
+
+	if len(shared.Players) <= 1 {
+		fmt.Println("Not enough players to start the game.")
+		return fmt.Errorf("Not enough players to start the game (Min 2)")
+	}
+
 	gameWasStarted = true
 	initializeGame(10, 10)
 
 	fmt.Println("Starting game...")
 	CurrentGameState = GameStatePlaying
 
-	shared.BroadcastMessage("game_start", "Game is starting...")
+	shared.BroadcastMessage("game_start", "Game is starting...", false)
 
 	fmt.Println("Starting game loop...")
 	runGameLoop()
@@ -73,12 +81,14 @@ func runGameLoop() {
 		for range ticker.C {
 			if CurrentGameState == GameStateFinished {
 				ticker.Stop()
+				fmt.Println("Exiting game loop...")
+				endGame("Game is over!")
+				os.Exit(0)
 				return
 			}
 			if CurrentGameState == GameStatePlaying {
 				gameLoop()
 			}
-			fmt.Println("Game loop ticked")
 		}
 	}()
 }
@@ -90,19 +100,22 @@ func gameLoop() {
 	tickAllPlayers()
 	tickAllBombs()
 
+	shared.BroadcastGameState(PlayingField)
+
 	if isGameOver() {
 		fmt.Println("Game over!")
 		CurrentGameState = GameStateFinished
-		return
 	}
-
-	shared.BroadcastGameState(PlayingField)
 }
 
 func isGameOver() bool {
 
 	shared.PlayersMutex.RLock()
 	defer shared.PlayersMutex.RUnlock()
+
+	if len(shared.Players) <= 1 {
+		return true
+	}
 
 	playersAlive := 0
 	for _, player := range shared.Players {
@@ -144,5 +157,20 @@ func tickAllPlayers() {
 		}
 
 		shared.Players[id] = player
+	}
+}
+
+func endGame(endMessage string) {
+
+	shared.BroadcastMessage("game_over", endMessage, false)
+
+	shared.PlayersMutex.RLock()
+	defer shared.PlayersMutex.RUnlock()
+
+	for _, player := range shared.Players {
+		if player.Conn == nil {
+			continue
+		}
+		player.Conn.Close()
 	}
 }

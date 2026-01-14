@@ -34,7 +34,9 @@ func HandlePlayerAction(player *shared.Player, action *shared.Action) (string, e
 			if err != nil {
 				return "", fmt.Errorf("Failed to get chat data: %w", err)
 			}
-			handleChat(chatData)
+			if handleChat(chatData) != nil {
+				return "", fmt.Errorf("Failed to handle chat")
+			}
 			break
 		}
 	case "start_game":

@@ -1,19 +1,6 @@
 import { useState } from "react";
 
-export default function Chat({ socket }) {
-  const currSock = socket.current;
-  const [messages, setMessages] = useState([]);
-
-  currSock.on("message", (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === "chat_message") {
-      setMessages([
-        ...messages,
-        { sender: data.sender, message: data.content },
-      ]);
-    }
-  });
-
+export default function Chat({ messages, sendChatMessage }) {
   return (
     <div className="chat" style={{ width: "300px", border: "1px solid black" }}>
       <div className="chat-messages">
@@ -21,7 +8,7 @@ export default function Chat({ socket }) {
           <ChatMessage key={index} sender={msg.sender} message={msg.message} />
         ))}
       </div>
-      <ChatInput socket={currSock} />
+      <ChatInput socket={sendChatMessage} />
     </div>
   );
 }
@@ -34,7 +21,7 @@ function ChatMessage({ sender, message }) {
   );
 }
 
-function ChatInput({ socket }) {
+function ChatInput({ sendChatMessage }) {
   const [message, setMessage] = useState("");
 
   const sendText = () => {
@@ -52,7 +39,7 @@ function ChatInput({ socket }) {
         e.preventDefault();
         sendText();
       }}
-      onChange={(e) => setMessage(e.target.value)}
+      onChange={(e) => sendChatMessage(e.target.value)}
     />
   );
 }

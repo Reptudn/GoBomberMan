@@ -67,9 +67,12 @@ func handleClientConnect(conn *websocket.Conn) *shared.Player {
 }
 
 func handleClientDisconnect(player *shared.Player) {
-	shared.PlayersMutex.Lock()
-	delete(shared.Players, player.ID)
-	shared.PlayersMutex.Unlock()
+	{
+		shared.PlayersMutex.Lock()
+		defer shared.PlayersMutex.Unlock()
+		delete(shared.Players, player.ID)
+	}
+
 	log.Printf("Client %d disconnected (remaining clients: %d)", player.ID, len(shared.Players))
 
 	if len(shared.Players) == 0 {
@@ -88,7 +91,7 @@ func handleClientMessage(player *shared.Player, message []byte) {
 
 	msg, errAction := actions.HandlePlayerAction(player, action)
 	if errAction != nil {
-		sendMessageToClient(player, "error", "Invalid Message: Action failed!")
+		sendMessageToClient(player, "error", errAction.Error())
 		return
 	}
 

@@ -2,8 +2,9 @@ package routes
 
 import (
 	"context"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -21,12 +22,11 @@ type gameListResponse struct {
 	Games  []GameInfo `json:"games"`
 }
 
-func ListGames(c *gin.Context, kubeClient kubernetes.Interface) {
+func ListGames(c echo.Context, kubeClient kubernetes.Interface) error {
 	pods, err := kubeClient.CoreV1().Pods("default").List(context.TODO(), metav1.ListOptions{LabelSelector: "app=bomberman-game-server"})
 
 	if err != nil {
-		c.JSON(500, gin.H{"status": "error listing game pods"})
-		return
+		return c.JSON(500, map[string]interface{}{"status": "error listing game pods"})
 	}
 
 	var games []GameInfo
@@ -45,10 +45,9 @@ func ListGames(c *gin.Context, kubeClient kubernetes.Interface) {
 		}
 	}
 
-	c.JSON(200, gin.H{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"status": "success",
 		"count":  len(games),
 		"games":  games,
 	})
-
 }

@@ -77,6 +77,7 @@ function GamePage() {
       clearTimeout(connectionTimeout);
       console.log("Socket error: ", error);
       setError("WebSocket connection error. Server may still be starting...");
+      navigate("/");
     };
 
     socket.onmessage = (event) => {
@@ -85,6 +86,7 @@ function GamePage() {
 
       switch (data.type) {
         case "game_state":
+          console.log("game state update", data);
           setGameData(data.message);
           break;
         case "game_start":
@@ -96,6 +98,9 @@ function GamePage() {
           break;
         case "chat":
           console.log("Chat message: ", data.message);
+          break;
+        case "success":
+          console.log("Success message: ", data.message);
           break;
         case "error":
           setError(data.message || "Unknown error from server");
@@ -134,17 +139,17 @@ function GamePage() {
           break;
         case "ArrowDown":
           socketRef.current?.send(
-            JSON.stringify({ type: "move", direction: "down" }),
+            JSON.stringify({ type: "move", message: { direction: "down" } }),
           );
           break;
         case "ArrowLeft":
           socketRef.current?.send(
-            JSON.stringify({ type: "move", direction: "left" }),
+            JSON.stringify({ type: "move", message: { direction: "left" } }),
           );
           break;
         case "ArrowRight":
           socketRef.current?.send(
-            JSON.stringify({ type: "move", direction: "right" }),
+            JSON.stringify({ type: "move", message: { direction: "right" } }),
           );
           break;
         case "Space":
@@ -204,8 +209,15 @@ function GamePage() {
           <strong>Status:</strong> {error}
         </div>
       )}
-      {gameRunning && <GameField fieldData={gameData.field || {}} />}
-      <Chat socket={socketRef} />
+      {gameRunning ? (
+        <GameField
+          fieldData={gameData.field || {}}
+          players={gameData.players || {}}
+        />
+      ) : (
+        <p>Waiting for game to start...</p>
+      )}
+      {/* <Chat socket={socketRef} /> */}
       <p>Joining Game ID: {gameId}</p>
       <button
         onClick={() => {
@@ -222,6 +234,13 @@ function GamePage() {
         }}
       >
         Send Message
+      </button>
+      <button
+        onClick={() => {
+          socketRef.current?.send(JSON.stringify({ type: "start_game" }));
+        }}
+      >
+        Start Game
       </button>
     </div>
   );

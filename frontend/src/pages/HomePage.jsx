@@ -71,24 +71,27 @@ function HomePage() {
     }, 500);
   };
 
-  // useEffect(() => {
-  //   const checkServerStatus = async () => {
-  //     try {
-  //       const response = await fetch(`${API_URL}/ping`);
-  //       if (response.ok) {
-  //         setServerOnline(true);
-  //       } else {
-  //         setServerOnline(false);
-  //       }
-  //     } catch {
-  //       setServerOnline(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/ping`);
+        if (response.ok) {
+          setServerOnline(true);
+        } else {
+          setServerOnline(false);
+        }
+      } catch {
+        setServerOnline(false);
+      }
+    };
 
-  //   setInterval(async () => {
-  //     if (!serverOnline) await checkServerStatus();
-  //   }, 1000);
-  // }, [serverOnline]);
+    setInterval(
+      async () => {
+        if (!serverOnline) await checkServerStatus();
+      },
+      serverOnline ? 10000 : 3000,
+    );
+  }, [serverOnline]);
 
   return (
     <div className="menu">
