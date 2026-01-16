@@ -53,6 +53,16 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleClientConnect(conn *websocket.Conn) *shared.Player {
+
+	/*
+		if game.CurrentGameState != game.GameStateWaiting {
+			fmt.Println("Game is not in waiting state")
+			if err := conn.Close(); err != nil {
+				log.Println("Error closing connection:", err)
+			}
+			return nil
+			}*/
+
 	shared.PlayersMutex.Lock()
 	player := &shared.Player{
 		ID:   nextClientID,

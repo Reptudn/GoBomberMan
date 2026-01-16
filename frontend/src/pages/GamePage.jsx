@@ -1,21 +1,18 @@
 import { useMemo } from "react";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GameField from "../components/game/GameField";
-import Chat from "../components/game/Chat";
+import { useWebSocket } from "../hooks/useWebSocket";
 
 function GamePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState("connecting");
   const [gameRunning, setGameRunning] = useState(false);
   const [fieldData, setFieldData] = useState({});
   const [playersData, setPlayersData] = useState({});
   const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 10;
 
   const { url, gameId } = location.state || {};
   const wsUrl = useMemo(() => {
@@ -23,65 +20,12 @@ function GamePage() {
     return `ws://${url}/ws`;
   }, [url]);
 
-  useEffect(() => {
-    if (!url || !gameId) {
-      alert("Missing wsUrl or gameId");
-      navigate("/");
-      return;
-    }
-
-    if (
-      socketRef.current?.readyState === WebSocket.OPEN ||
-      socketRef.current?.readyState === WebSocket.CONNECTING
-    ) {
-      console.log("Socket already exists, skipping connection");
-      return;
-    }
-
-    console.log("Game ID: ", gameId);
-    console.log(`Connecting to game with ID: ${gameId}`);
-
-    const socket = new WebSocket(wsUrl);
-
-    const connectionTimeout = setTimeout(() => {
-      if (socket.readyState !== WebSocket.OPEN) {
-        console.log("Connection timeout, will retry...");
-        socket.close();
-      }
-    }, 3000);
-
-    socket.onclose = (event) => {
-      clearTimeout(connectionTimeout);
-      console.log("Socket closed: ", event);
-
-      if (retryCount < maxRetries && event.code !== 1000) {
-        console.log(
-          `Retrying connection in 2 seconds... (${retryCount + 1}/${maxRetries})`,
-        );
-        setIsConnected("disconnected");
-        setError(
-          `Connection failed. Retrying... (${retryCount + 1}/${maxRetries})`,
-        );
-
-        setTimeout(() => {
-          setRetryCount(retryCount + 1);
-        }, 2000);
-      } else {
-        setIsConnected("disconnected");
-        setError(
-          `Failed to connect after ${maxRetries} attempts. Game server may not be ready yet.`,
-        );
-      }
-    };
-
-    socket.onerror = (error) => {
-      clearTimeout(connectionTimeout);
-      console.log("Socket error: ", error);
-      setError("WebSocket connection error. Server may still be starting...");
-      navigate("/");
-    };
-
-    socket.onmessage = (event) => {
+  const { sendSocketMessage, closeSocket, socket } = useWebSocket(wsUrl, {
+    onOpen: (event) => {
+      console.log("Socket opened", event);
+      setIsConnected("connected");
+    },
+    onMessage: (event) => {
       const data = JSON.parse(event.data);
       console.log("Socket message: ", data);
 
@@ -96,8 +40,10 @@ function GamePage() {
           setGameRunning(true);
           setError(null);
           break;
-        case "game_end":
+        case "game_over":
+          alert("Game Over!", data.message);
           setGameRunning(false);
+          navigate("/");
           break;
         case "chat":
           console.log("Chat message: ", data.message);
@@ -111,24 +57,23 @@ function GamePage() {
         default:
           console.log("Unknown message type: ", data.type);
       }
-    };
-
-    socket.onopen = () => {
-      console.log("Socket connected");
-      setIsConnected("connected");
-      setRetryCount(0);
-    };
-
-    socketRef.current = socket;
-
-    return () => {
-      clearTimeout(connectionTimeout);
-      console.log("Cleaning up socket");
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.close(1000);
+    },
+    onClose: (event) => {
+      console.log("Socket closed", event);
+      setIsConnected("disconnected");
+      if (!error) {
+        setError("WebSocket connection closed by server");
       }
-    };
-  }, [wsUrl, gameId, navigate]);
+    },
+    onError: (error) => {
+      console.error("WS ERROR: ", error);
+      setError("WebSocket connection error. Server may still be starting...");
+      setIsConnected("disconnected");
+      // navigate("/");
+    },
+  });
+
+  console.log("Socket connected", socket);
 
   useEffect(() => {
     if (!gameRunning) return;
@@ -136,27 +81,28 @@ function GamePage() {
     const handleKeyPress = (e) => {
       switch (e.key) {
         case "ArrowUp":
-          socketRef.current?.send(
-            JSON.stringify({ type: "move", direction: "up" }),
+          sendSocketMessage(
+            JSON.stringify({ type: "move", data: { direction: "up" } }),
           );
           break;
         case "ArrowDown":
-          socketRef.current?.send(
-            JSON.stringify({ type: "move", message: { direction: "down" } }),
+          sendSocketMessage(
+            JSON.stringify({ type: "move", data: { direction: "down" } }),
           );
           break;
         case "ArrowLeft":
-          socketRef.current?.send(
-            JSON.stringify({ type: "move", message: { direction: "left" } }),
+          sendSocketMessage(
+            JSON.stringify({ type: "move", data: { direction: "left" } }),
           );
           break;
         case "ArrowRight":
-          socketRef.current?.send(
-            JSON.stringify({ type: "move", message: { direction: "right" } }),
+          sendSocketMessage(
+            JSON.stringify({ type: "move", data: { direction: "right" } }),
           );
           break;
-        case "Space":
-          socketRef.current?.send(JSON.stringify({ type: "place_bomb" }));
+        case " ":
+          console.log("Placing bomb");
+          sendSocketMessage(JSON.stringify({ type: "place_bomb" }));
           break;
         default:
           break;
@@ -167,7 +113,7 @@ function GamePage() {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [gameRunning]);
+  }, [gameRunning, sendSocketMessage]);
 
   if (!gameId) {
     return (
@@ -176,7 +122,7 @@ function GamePage() {
         <p>No Game Id</p>
         <button
           onClick={() => {
-            socketRef.current?.close(1000);
+            closeSocket(1000);
             navigate("/");
           }}
         >
@@ -210,11 +156,29 @@ function GamePage() {
           }}
         >
           <strong>Status:</strong> {error}
+          <button
+            onClick={() => {
+              setError(null);
+              setIsConnected("connecting");
+              // trigger reconnect by re-creating the ws url: you could force a re-mount or toggle wsUrl
+              // simplest: call close then rely on effect to recreate if url didn't change
+              closeSocket(1000);
+            }}
+          >
+            Retry / Reconnect
+          </button>
         </div>
       )}
       {gameRunning ? (
         <>
-          <GameField fieldData={fieldData || {}} players={playersData || {}} />
+          <GameField
+            fieldData={fieldData || {}}
+            players={
+              Array.isArray(playersData)
+                ? playersData
+                : Object.values(playersData || {})
+            }
+          />
           <p>Game ID: {gameId}</p>
         </>
       ) : (
@@ -224,7 +188,6 @@ function GamePage() {
       <p>Joining Game ID: {gameId}</p>
       <button
         onClick={() => {
-          socketRef.current?.close(1000);
           navigate("/");
         }}
       >
@@ -233,18 +196,20 @@ function GamePage() {
       <button
         onClick={() => {
           const msg = prompt("Enter message");
-          socketRef.current?.send(msg || "Hallo");
+          sendSocketMessage(msg || "Hallo");
         }}
       >
         Send Message
       </button>
-      <button
-        onClick={() => {
-          socketRef.current?.send(JSON.stringify({ type: "start_game" }));
-        }}
-      >
-        Start Game
-      </button>
+      {!gameRunning && (
+        <button
+          onClick={() => {
+            sendSocketMessage(JSON.stringify({ type: "start_game" }));
+          }}
+        >
+          Start Game
+        </button>
+      )}
     </div>
   );
 }

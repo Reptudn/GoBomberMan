@@ -65,7 +65,7 @@ func main() {
 			uptime := time.Since(startTime)
 			log.Printf("Server uptime: %s", uptime.String())
 			if uptime > 2*time.Minute && len(shared.Players) == 0 && !game.GetGameWasStarted() {
-				log.Println("No players connected and game not started for 2 minutes. Shutting down server.")
+				log.Println("No players connected and game hasn't started for 2 minutes. Shutting down server.")
 				os.Exit(0)
 			}
 		}
@@ -73,4 +73,6 @@ func main() {
 	}()
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	fmt.Println("Game Server stopped!")
 }

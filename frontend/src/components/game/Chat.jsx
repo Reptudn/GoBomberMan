@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Chat({ messages, sendChatMessage }) {
+export default function Chat({ messages = [], sendChatMessage }) {
   return (
     <div className="chat" style={{ width: "300px", border: "1px solid black" }}>
       <div className="chat-messages">
@@ -8,7 +8,7 @@ export default function Chat({ messages, sendChatMessage }) {
           <ChatMessage key={index} sender={msg.sender} message={msg.message} />
         ))}
       </div>
-      <ChatInput socket={sendChatMessage} />
+      <ChatInput sendChatMessage={sendChatMessage} />
     </div>
   );
 }
@@ -24,22 +24,27 @@ function ChatMessage({ sender, message }) {
 function ChatInput({ sendChatMessage }) {
   const [message, setMessage] = useState("");
 
-  const sendText = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!message) return;
     const chatMessage = { type: "chat_message", content: message };
-    socket.send(JSON.stringify(chatMessage));
+    // parent expects to receive a ready-to-send string or object; here we stringify
+    if (typeof sendChatMessage === "function") {
+      sendChatMessage(JSON.stringify(chatMessage));
+    }
     setMessage("");
   };
 
   return (
-    <input
-      type="text"
-      className="chat-input"
-      placeholder="Type a message..."
-      onSubmit={(e) => {
-        e.preventDefault();
-        sendText();
-      }}
-      onChange={(e) => sendChatMessage(e.target.value)}
-    />
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        className="chat-input"
+        placeholder="Type a message..."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+      />
+      <button type="submit">Send</button>
+    </form>
   );
 }

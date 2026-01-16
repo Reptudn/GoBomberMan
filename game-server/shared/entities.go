@@ -42,12 +42,15 @@ type Player struct {
 	MaxBombCount     int
 	Bomb             Bomb
 	WantsToPlaceBomb bool
+
+	WriteMutex sync.Mutex
 }
 
 func (p *Player) ToJSON() string {
 	return `{"id":` + strconv.Itoa(p.ID) +
 		`,"color":"` + p.Color +
-		`","pos":` + p.Pos.ToJSON() + `}`
+		`","pos":` + p.Pos.ToJSON() +
+		`,"alive":` + strconv.FormatBool(p.Alive) + `}`
 }
 
 type Bomb struct {
@@ -63,15 +66,9 @@ func (p *Player) GetBasicBomb() *Bomb {
 	return &Bomb{
 		Owner:              p,
 		Position:           p.Pos,
-		Strength:           1,
-		TicksTillExplosion: 10,
+		Strength:           2,
+		TicksTillExplosion: 20,
 		PierceWalls:        false,
-	}
-}
-
-func (b *Bomb) Explode() {
-	if b.Owner != nil && b.Owner.BombCount < b.Owner.MaxBombCount {
-		b.Owner.BombCount++
 	}
 }
 

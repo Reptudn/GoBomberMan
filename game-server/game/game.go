@@ -1,9 +1,9 @@
 package game
 
 import (
+	"bomberman-game-server/game/generation"
 	"bomberman-game-server/shared"
 	"fmt"
-	"os"
 	"time"
 )
 
@@ -25,15 +25,16 @@ func GetGameWasStarted() bool {
 }
 
 var PlayingField *shared.Field
+var endGameReason string
 
 func initializeGame(width, height int) {
 	fmt.Println("Initializing game...")
-	PlayingField = shared.GenerateEmptyField(width, height)
+	// PlayingField = shared.GenerateEmptyField(width, height)
+	PlayingField = generation.GenerateClassic(width, height, 0.3)
 
-	// TODO: Set spawn Positions
 	fmt.Println("Setting spawn positions...")
 	for _, player := range shared.Players {
-		player.Pos = shared.Pos{X: width / 2, Y: height / 2}
+		player.Pos = PlayingField.GetRandomSpawnPos()
 		player.NextPos = player.Pos
 		player.Bomb = *player.GetBasicBomb()
 		player.Alive = true
@@ -56,7 +57,7 @@ func StartGame() error {
 	}
 
 	gameWasStarted = true
-	initializeGame(10, 10)
+	initializeGame(25, 25)
 
 	fmt.Println("Starting game...")
 	CurrentGameState = GameStatePlaying
@@ -82,8 +83,7 @@ func runGameLoop() {
 			if CurrentGameState == GameStateFinished {
 				ticker.Stop()
 				fmt.Println("Exiting game loop...")
-				endGame("Game is over!")
-				os.Exit(0)
+				endGame()
 				return
 			}
 			if CurrentGameState == GameStatePlaying {
@@ -97,15 +97,18 @@ func gameLoop() {
 
 	fmt.Println("Tick")
 
-	tickAllPlayers()
-	tickAllBombs()
-
-	shared.BroadcastGameState(PlayingField)
-
 	if isGameOver() {
 		fmt.Println("Game over!")
 		CurrentGameState = GameStateFinished
+		endGameReason = "Game Over!"
 	}
+
+	tickAllPlayers()
+	tickAllBombs()
+	tickAllExplosions()
+
+	shared.BroadcastGameState(PlayingField)
+
 }
 
 func isGameOver() bool {
@@ -133,7 +136,22 @@ func tickAllBombs() {
 		bomb.TicksTillExplosion--
 
 		if bomb.TicksTillExplosion <= 0 {
-			bomb.Explode()
+
+			PlayingField.ExplodeBomb(bomb, true)
+		}
+	}
+}
+
+func tickAllExplosions() {
+	for y := 0; y < PlayingField.Height; y++ {
+		for x := 0; x < PlayingField.Width; x++ {
+			cell := &PlayingField.Cells[y][x]
+			if cell.Type == shared.CellExplosion {
+				cell.TicksTillExplosionOver--
+				if cell.TicksTillExplosionOver <= 0 {
+					cell.Type = shared.CellEmpty
+				}
+			}
 		}
 	}
 }
@@ -144,11 +162,8 @@ func tickAllPlayers() {
 
 	for id, player := range shared.Players {
 
-		// BOMB PLACEMENT
-		if player.WantsToPlaceBomb {
-			player.WantsToPlaceBomb = false
-			player.BombCount--
-			PlayingField.PlaceBomb(player)
+		if !player.Alive {
+			continue
 		}
 
 		// MOVEMENT
@@ -156,21 +171,129 @@ func tickAllPlayers() {
 			player.Pos = player.NextPos
 		}
 
+		// Player death handling and collect powerups
+		cell := PlayingField.GetCellAtPos(player.Pos.X, player.Pos.Y)
+		if cell != nil {
+
+			switch cell.Type {
+			case shared.CellPowerUp:
+				if cell.PowerUp != nil {
+					cell.PowerUp.Effect(player)
+				}
+				cell.Type = shared.CellEmpty
+				cell.PowerUp = nil
+			case shared.CellExplosion:
+				player.Alive = false
+			case shared.CellExplosionPierce:
+				player.Alive = false
+			}
+
+		}
+
+		// BOMB PLACEMENT
+		if player.WantsToPlaceBomb {
+			if player.BombCount < 0 {
+				player.BombCount = 0
+			}
+			if player.BombCount > 0 {
+				PlayingField.PlaceBomb(player)
+			}
+			player.BombCount--
+			player.WantsToPlaceBomb = false
+		}
+
 		shared.Players[id] = player
 	}
 }
 
-func endGame(endMessage string) {
+/*
+func endGame() {
+
+	endMessage := "Game Over!"
+
+	if len(shared.Players) <= 1 {
+		endMessage = "No players left!"
+	}
+
+	alivePlayers := 0
+	for _, player := range shared.Players {
+		if player.Alive {
+			alivePlayers++
+		}
+	}
+
+	if alivePlayers <= 1 {
+		endMessage = "WINNER! Only one player left!"
+	}
+
+	if alivePlayers == 0 {
+		endMessage = "TIE! All players have been eliminated!"
+	}
 
 	shared.BroadcastMessage("game_over", endMessage, false)
 
-	shared.PlayersMutex.RLock()
-	defer shared.PlayersMutex.RUnlock()
+	shared.PlayersMutex.Lock()
+	defer shared.PlayersMutex.Unlock()
 
-	for _, player := range shared.Players {
-		if player.Conn == nil {
+	for id, player := range shared.Players {
+		if player == nil {
+			delete(shared.Players, id)
 			continue
 		}
-		player.Conn.Close()
+		// Serialize writes/close to avoid concurrent write/close panics
+		player.WriteMutex.Lock()
+		if player.Conn != nil {
+			_ = player.Conn.Close()
+			player.Conn = nil
+		}
+		player.WriteMutex.Unlock()
+
+		delete(shared.Players, id)
 	}
+}
+*/
+
+func endGame() {
+
+	endMessage := "Game Over!"
+
+	if len(shared.Players) <= 1 {
+		endMessage = "No players left!"
+	}
+
+	alivePlayers := 0
+	for _, player := range shared.Players {
+		if player.Alive {
+			alivePlayers++
+		}
+	}
+
+	if alivePlayers <= 1 {
+		endMessage = "WINNER! Only one player left!"
+	}
+
+	if alivePlayers == 0 {
+		endMessage = "TIE! All players have been eliminated!"
+	}
+
+	// Broadcast final message while connections still exist
+	shared.BroadcastMessage("game_over", endMessage, false)
+
+	// Now close and remove players safely
+	shared.PlayersMutex.Lock()
+	for id, player := range shared.Players {
+		if player == nil {
+			delete(shared.Players, id)
+			continue
+		}
+		player.WriteMutex.Lock()
+		if player.Conn != nil {
+			_ = player.Conn.Close()
+			player.Conn = nil
+		}
+		player.WriteMutex.Unlock()
+
+		delete(shared.Players, id)
+	}
+	shared.PlayersMutex.Unlock()
 }

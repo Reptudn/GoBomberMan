@@ -1,10 +1,14 @@
-export default function GameField({ fieldData, players }) {
-  if (!fieldData || !players)
+export default function GameField({ fieldData = null, players = [] } = {}) {
+  if (!fieldData || !Array.isArray(players))
     return <p>No game field and player data available</p>;
 
+  if (!fieldData.cells || !fieldData.width || !fieldData.height)
+    return <p>Invalid game field data</p>;
+
   const getCellColor = (cell) => {
-    if (!cell.type) return "lightgray";
-    switch (cell.type) {
+    const type = cell?.type ?? cell;
+    if (type === undefined || type === null) return "lightgray";
+    switch (String(type)) {
       case "0":
         return "lightgray"; // EMPTY
       case "1":
@@ -22,7 +26,31 @@ export default function GameField({ fieldData, players }) {
     }
   };
 
-  // TODO: also render players on the field
+  const renderCellContent = (cell, index) => {
+    // cell may be an object with .type or a primitive
+    const type = cell?.type ?? cell;
+    // show short label for bombs/players etc.
+
+    // check for player on this cell
+    const x = index % fieldData.width;
+    const y = Math.floor(index / fieldData.width);
+    const playerHere = players.find(
+      (p) => p?.pos && p.pos.x === x && p.pos.y === y && p?.alive,
+    );
+    if (playerHere) {
+      // you can render player id/name instead of "P"
+      return "👨";
+    }
+
+    if (String(type) === "3") return "💣";
+    if (String(type) === "4") return "💥";
+    if (String(type) === "5") return "⭐";
+    if (String(type) === "6") return "🔷";
+
+    // otherwise, nothing visible for empty/other types
+    return "";
+  };
+
   return (
     <>
       <p>Game Field:</p>
@@ -51,15 +79,7 @@ export default function GameField({ fieldData, players }) {
               color: "white",
             }}
           >
-            {cell !== 0 ? cell : ""}
-            {players.forEach((player) => {
-              if (
-                player.pos.x === index % fieldData.width &&
-                player.pos.y === Math.floor(index / fieldData.height)
-              ) {
-                return "P";
-              }
-            })}
+            {renderCellContent(cell, index)}
           </div>
         ))}
       </div>
