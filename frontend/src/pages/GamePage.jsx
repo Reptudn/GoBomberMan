@@ -17,7 +17,8 @@ function GamePage() {
   const { url, gameId } = location.state || {};
   const wsUrl = useMemo(() => {
     if (!url) return null;
-    return `ws://${url}/ws`;
+    const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+    return `${wsProtocol}://${window.location.host.split(":")[0]}:${url.split(":")[1]}/ws`;
   }, [url]);
 
   const { sendSocketMessage, closeSocket, socket } = useWebSocket(wsUrl, {
@@ -135,7 +136,7 @@ function GamePage() {
   return (
     <div>
       <h1>Game Page</h1>
-      <h3>WebSocket URL: {url || "Not Available"}</h3>
+      <h3>WebSocket URL: {wsUrl || "Not Available"}</h3>
       <h3>
         WebSocket Status:{" "}
         {isConnected === "connected"

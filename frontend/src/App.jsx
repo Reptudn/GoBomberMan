@@ -4,7 +4,8 @@ import LobbiesPage from "./pages/LobbiesPage";
 import GamePage from "./pages/GamePage";
 import "./App.css";
 
-export const API_URL = "http://localhost:8080";
+export const API_URL = `http://${window.location.host.split(":")[0]}:8080`;
+// export const API_URL = `http://172.17.252.15:8080`;
 
 function App() {
   return (

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bomberman-backend/utils"
 	"context"
 	"fmt"
 
@@ -30,10 +31,15 @@ func JoinGame(c echo.Context, kubeClient kubernetes.Interface) error {
 	nodePort := service.Spec.Ports[0].NodePort
 	fmt.Printf("Found game service. NodePort: %d\n", nodePort)
 
+	ip, err := utils.GetLocalIP()
+	if err != nil {
+		return c.JSON(500, map[string]interface{}{"status": "error getting local IP"})
+	}
+
 	return c.JSON(200, map[string]interface{}{
 		"status":      "success",
 		"gameId":      gameId,
-		"url":         fmt.Sprintf("%s:%d", "localhost", nodePort),
+		"url":         fmt.Sprintf("%s:%d", ip, nodePort),
 		"servicePort": nodePort,
 	})
 }
