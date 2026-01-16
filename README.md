@@ -1,5 +1,11 @@
 ## This project is there for me to learn Kubernetes Deployment and Golang.
-> THERE IS NO GAME YET AS OF THIS POINT!
+
+## Game
+- Min Players is 2
+- So far any player can start a game (no admin roles yet)
+- players can move with the arrow keys and place bombs with the spacebar
+- players can collect powerups
+- players can die
 
 - Backend and Game Server written in Go
 - Frontent UI written in React
