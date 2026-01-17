@@ -107,7 +107,7 @@ func (f *Field) PlaceBomb(player *Player) {
 	defer f.mutex.Unlock()
 
 	cell := &f.Cells[pos.Y][pos.X]
-	if cell == nil || cell.Type != CellEmpty {
+	if cell.Type != CellEmpty {
 		return
 	}
 
@@ -157,7 +157,7 @@ func (f *Field) RemoveBomb(bomb *Bomb) {
 	defer f.mutex.Unlock()
 
 	cell := &f.Cells[bomb.Position.Y][bomb.Position.X]
-	if cell == nil || cell.Type != CellBomb || cell.Bomb != bomb {
+	if cell.Type != CellBomb || cell.Bomb != bomb {
 		return
 	}
 
@@ -213,11 +213,7 @@ func (f *Field) ExplodeBomb(bomb *Bomb, lockMutex bool) {
 			return
 		}
 
-		// if cell is a nil
 		cell := &f.Cells[y][x]
-		if cell == nil {
-			return
-		}
 
 		// if cell is a indestructible wall
 		if cell.Type == CellWallIndestructible {
