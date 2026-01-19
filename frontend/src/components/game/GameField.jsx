@@ -19,7 +19,9 @@ export default function GameField({ fieldData = null, players = [], selfID = -1 
         return "red";
       case "4": // BOMB_EXPLOSION
         return "orange";
-      case "5": // POWERUP_BOMB_COUNT_INCREASE
+      case "5": // BOMB_EXPLOSION_PIERCE
+        return "blue"
+      case "6": // POWERUP_BOMB_COUNT_INCREASE
         return "green";
       default:
         return "lightgray";
@@ -44,8 +46,17 @@ export default function GameField({ fieldData = null, players = [], selfID = -1 
 
     if (String(type) === "3") return "💣";
     if (String(type) === "4") return "💥";
-    if (String(type) === "5") return "⭐";
-    if (String(type) === "6") return "🔷";
+    if (String(type) === "5") return "🔷";
+
+    if (String(type) === "6") return "🎲❓";
+    if (String(type) === "7") return "➕💣";
+    if (String(type) === "8") return "➖💣";
+    if (String(type) === "9") return "💣";
+    if (String(type) === "10") return "💣🧱➡️";
+    if (String(type) === "11") return "🔥⬆️";
+    if (String(type) === "12") return "🔥⬇️";
+    if (String(type) === "13") return "⚡⬆️";
+    if (String(type) === "14") return "🐌⬇️";
 
     // otherwise, nothing visible for empty/other types
     return "";

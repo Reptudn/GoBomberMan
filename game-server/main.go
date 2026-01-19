@@ -6,6 +6,7 @@ import (
 	"bomberman-game-server/shared"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -44,6 +45,7 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 var startTime time.Time
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	startTime = time.Now()
 	fmt.Println("Game Server started on :8080")
 

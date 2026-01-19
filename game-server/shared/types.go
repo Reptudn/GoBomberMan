@@ -30,3 +30,26 @@ func (p Pos) Sub(other Pos) Pos {
 func (p Pos) Equal(other Pos) bool {
 	return p.X == other.X && p.Y == other.Y
 }
+
+type CellType int
+
+const (
+	CellEmpty CellType = iota
+
+	CellWallDestructible
+	CellWallIndestructible
+
+	CellBomb
+	CellExplosion
+	CellExplosionPierce
+
+	CellPowerUpRandom
+	CellPowerUpAddBomb
+	CellPowerUpRemoveBomb
+	CellPowerUpNormalBomb
+	CellPowerUpPiercingBomb
+	CellPowerUpAddStrenght
+	CellPowerUpRemoveStrenght
+	CellPowerUpAddSpeed
+	CellPowerUpRemoveSpeed
+)

@@ -8,24 +8,10 @@ import (
 	"sync"
 )
 
-type CellType int
-
-const (
-	CellEmpty CellType = iota
-	CellWallDestructible
-	CellWallIndestructible
-	CellBomb
-	CellExplosion
-	CellPowerUp
-	CellExplosionPierce
-)
-
 type Cell struct {
 	Type CellType
 
 	Bomb *Bomb // only when CellBomb
-
-	PowerUp *PowerUp // only when CellPowerUp
 
 	TicksTillExplosionOver int
 }
@@ -94,7 +80,7 @@ func (f *Field) IsWalkable(pos Pos) bool {
 	if cell == nil {
 		return false
 	}
-	return cell.Type == CellEmpty || cell.Type == CellPowerUp || cell.Type == CellBomb
+	return cell.Type == CellEmpty || cell.Type == CellBomb || cell.Type >= CellPowerUpRandom
 }
 
 func (f *Field) PlaceBomb(player *Player) {
@@ -230,10 +216,8 @@ func (f *Field) ExplodeBomb(bomb *Bomb, lockMutex bool) {
 					cell.Type = CellExplosion
 				}
 			} else {
-				cell.Type = CellPowerUp
-				cell.PowerUp = &PowerUp{ID: 10, Type: "Test", Effect: func(p *Player) {
-					p.Bomb.PierceWalls = !p.Bomb.PierceWalls
-				}}
+				// when a wall ps being destroyed there is a random chance a powerup will spawn
+				cell.Type = CreateRandomPowerUp()
 			}
 			cell.TicksTillExplosionOver = defaultTicksTillExplosionOver
 			if !bomb.PierceWalls {

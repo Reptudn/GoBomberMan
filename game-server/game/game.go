@@ -183,19 +183,12 @@ func tickAllPlayers() {
 		cell := PlayingField.GetCellAtPos(player.Pos.X, player.Pos.Y)
 		if cell != nil {
 
-			switch cell.Type {
-			case shared.CellPowerUp:
-				if cell.PowerUp != nil {
-					cell.PowerUp.Effect(player)
-				}
+			if shared.IsPowerUp(cell.Type) {
+				shared.HandlePowerUpForPlayer(cell.Type, player)
 				cell.Type = shared.CellEmpty
-				cell.PowerUp = nil
-			case shared.CellExplosion:
-				player.Alive = false
-			case shared.CellExplosionPierce:
+			} else if cell.Type == shared.CellExplosion || cell.Type == shared.CellExplosionPierce {
 				player.Alive = false
 			}
-
 		}
 
 		// BOMB PLACEMENT
@@ -284,10 +277,8 @@ func endGame() {
 		endMessage = "TIE! All players have been eliminated!"
 	}
 
-	// Broadcast final message while connections still exist
 	shared.BroadcastMessage("game_over", endMessage, false)
 
-	// Now close and remove players safely
 	shared.PlayersMutex.Lock()
 	for id, player := range shared.Players {
 		if player == nil {

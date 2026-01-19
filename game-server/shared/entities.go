@@ -26,7 +26,7 @@ func playersAsJSON() string {
 	return builder.String()
 }
 
-var defaultPlayerMoveDelay = 5
+var DefaultPlayerMoveDelay = 5
 
 type Player struct {
 	ID   int
@@ -50,10 +50,7 @@ type Player struct {
 }
 
 func (p *Player) CanMove() bool {
-	if p.TicksSinceLastMove >= defaultPlayerMoveDelay {
-		return true
-	}
-	return false
+	return p.TicksSinceLastMove >= DefaultPlayerMoveDelay
 }
 
 func (p *Player) ToJSON() string {
@@ -72,18 +69,17 @@ type Bomb struct {
 }
 
 // this is the bomb given to the player on start
+var MinBombStrenght = 2
+var MaxBombStrength = 15
+var MinBombCount = 1
+var MaxBombCount = 10
+
 func (p *Player) GetBasicBomb() *Bomb {
 	return &Bomb{
 		Owner:              p,
 		Position:           p.Pos,
-		Strength:           2,
+		Strength:           MinBombStrenght,
 		TicksTillExplosion: 20,
 		PierceWalls:        false,
 	}
-}
-
-type PowerUp struct {
-	ID     int
-	Type   string
-	Effect func(*Player)
 }

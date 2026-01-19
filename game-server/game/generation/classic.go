@@ -27,9 +27,8 @@ func GenerateClassic(width, height int, freePerc float64) *shared.Field {
 			if rand < 15 {
 				field.Cells[y][x] = shared.Cell{Type: shared.CellWallDestructible}
 			} else if rand < 20 {
-				field.Cells[y][x] = shared.Cell{Type: shared.CellPowerUp, PowerUp: &shared.PowerUp{ID: 10, Type: "Test", Effect: func(p *shared.Player) {
-					p.Bomb.Strength++
-				}}}
+				powerup := shared.CreateRandomPowerUp()
+				field.Cells[y][x] = shared.Cell{Type: powerup}
 			} else {
 				field.Cells[y][x] = shared.Cell{Type: shared.CellEmpty}
 			}
