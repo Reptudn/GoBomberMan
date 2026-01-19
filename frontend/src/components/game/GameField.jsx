@@ -1,4 +1,4 @@
-export default function GameField({ fieldData = null, players = [] } = {}) {
+export default function GameField({ fieldData = null, players = [], selfID = -1 } = {}) {
   if (!fieldData || !Array.isArray(players))
     return <p>No game field and player data available</p>;
 
@@ -38,7 +38,7 @@ export default function GameField({ fieldData = null, players = [] } = {}) {
       (p) => p?.pos && p.pos.x === x && p.pos.y === y && p?.alive,
     );
     if (playerHere) {
-      // you can render player id/name instead of "P"
+      if (selfID != -1 && playerHere.id === selfID) return "😼"
       return "👨";
     }
 

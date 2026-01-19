@@ -15,30 +15,6 @@ func BuildRawMessage(msgType string, message string) string {
 	return fmt.Sprintf(`{"type": "%s", "message": %s}`, msgType, message)
 }
 
-/*
-func BroadcastMessage(msgType string, message string, raw bool) {
-	PlayersMutex.RLock()
-	defer PlayersMutex.RUnlock()
-
-	var msg string
-	if raw {
-		msg = BuildRawMessage(msgType, message)
-	} else {
-		msg = BuildMessage(msgType, message)
-	}
-
-	for _, player := range Players {
-		if player == nil {
-			continue
-		}
-		err := player.Conn.WriteMessage(websocket.TextMessage, []byte(msg))
-		if err != nil {
-			log.Println("Broadcast error:", err)
-		}
-	}
-}
-*/
-
 func BroadcastMessage(msgType string, message string, raw bool) {
 	PlayersMutex.RLock()
 	playersSnapshot := make([]*Player, 0, len(Players))
@@ -75,7 +51,6 @@ func BroadcastGameState(field *Field) {
 	BroadcastMessage("game_state", fmt.Sprintf(`{"players": %s, "field": %s}`, playersAsJSON(), field.ToJSON()), true)
 }
 
-/*
 func SendMessageToClientByID(clientID int, msgType string, message string) {
 	PlayersMutex.RLock()
 	defer PlayersMutex.RUnlock()
@@ -92,4 +67,3 @@ func SendMessageToClientByID(clientID int, msgType string, message string) {
 		log.Println("Send error:", err)
 	}
 }
-*/

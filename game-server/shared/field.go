@@ -236,7 +236,7 @@ func (f *Field) ExplodeBomb(bomb *Bomb, lockMutex bool) {
 				}}
 			}
 			cell.TicksTillExplosionOver = defaultTicksTillExplosionOver
-			if bomb.PierceWalls {
+			if !bomb.PierceWalls {
 				return
 			}
 		}

@@ -13,6 +13,7 @@ function GamePage() {
   const [fieldData, setFieldData] = useState({});
   const [playersData, setPlayersData] = useState({});
   const [error, setError] = useState(null);
+  const [selfID, setSelfID] = useState(-1)
 
   const { url, gameId } = location.state || {};
   const wsUrl = useMemo(() => {
@@ -55,6 +56,9 @@ function GamePage() {
         case "error":
           setError(data.message || "Unknown error from server");
           break;
+        case "id":
+          setSelfID(Number(data.message));
+          alert('id is now', id)
         default:
           console.log("Unknown message type: ", data.type);
       }
@@ -179,6 +183,7 @@ function GamePage() {
                 ? playersData
                 : Object.values(playersData || {})
             }
+            selfID={selfID}
           />
           <p>Game ID: {gameId}</p>
         </>

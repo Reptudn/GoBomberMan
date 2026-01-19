@@ -4,6 +4,7 @@ import (
 	"bomberman-game-server/game/generation"
 	"bomberman-game-server/shared"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -58,6 +59,10 @@ func StartGame() error {
 
 	gameWasStarted = true
 	initializeGame(25, 25)
+
+	for _, player := range shared.Players {
+		shared.SendMessageToClientByID(player.ID, "id", strconv.Itoa(player.ID))
+	}
 
 	fmt.Println("Starting game...")
 	CurrentGameState = GameStatePlaying
@@ -146,7 +151,7 @@ func tickAllExplosions() {
 	for y := 0; y < PlayingField.Height; y++ {
 		for x := 0; x < PlayingField.Width; x++ {
 			cell := &PlayingField.Cells[y][x]
-			if cell.Type == shared.CellExplosion {
+			if cell.Type == shared.CellExplosion || cell.Type == shared.CellExplosionPierce {
 				cell.TicksTillExplosionOver--
 				if cell.TicksTillExplosionOver <= 0 {
 					cell.Type = shared.CellEmpty
