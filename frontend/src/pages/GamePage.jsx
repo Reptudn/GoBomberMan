@@ -80,45 +80,58 @@ function GamePage() {
 
   console.log("Socket connected", socket);
 
-  useEffect(() => {
-    if (!gameRunning) return;
+useEffect(() => {
+  if (!gameRunning) return;
 
-    const handleKeyPress = (e) => {
-      switch (e.key) {
-        case "ArrowUp":
-          sendSocketMessage(
-            JSON.stringify({ type: "move", data: { direction: "up" } }),
-          );
-          break;
-        case "ArrowDown":
-          sendSocketMessage(
-            JSON.stringify({ type: "move", data: { direction: "down" } }),
-          );
-          break;
-        case "ArrowLeft":
-          sendSocketMessage(
-            JSON.stringify({ type: "move", data: { direction: "left" } }),
-          );
-          break;
-        case "ArrowRight":
-          sendSocketMessage(
-            JSON.stringify({ type: "move", data: { direction: "right" } }),
-          );
-          break;
-        case " ":
-          console.log("Placing bomb");
-          sendSocketMessage(JSON.stringify({ type: "place_bomb" }));
-          break;
-        default:
-          break;
-      }
-    };
-    window.addEventListener("keydown", handleKeyPress);
+  const keysPressed = {};
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [gameRunning, sendSocketMessage]);
+  const handleKeyDown = (e) => {
+    keysPressed[e.key] = true;
+
+    // Handle single actions (bomb placement)
+    if (e.key === " ") {
+      console.log("Placing bomb");
+      sendSocketMessage(JSON.stringify({ type: "place_bomb" }));
+    }
+  };
+
+  const handleKeyUp = (e) => {
+    keysPressed[e.key] = false;
+  };
+
+  // Poll for held keys to send continuous movement updates
+  const movementInterval = setInterval(() => {
+    if (keysPressed["ArrowUp"]) {
+      sendSocketMessage(
+        JSON.stringify({ type: "move", data: { direction: "up" } }),
+      );
+    }
+    if (keysPressed["ArrowDown"]) {
+      sendSocketMessage(
+        JSON.stringify({ type: "move", data: { direction: "down" } }),
+      );
+    }
+    if (keysPressed["ArrowLeft"]) {
+      sendSocketMessage(
+        JSON.stringify({ type: "move", data: { direction: "left" } }),
+      );
+    }
+    if (keysPressed["ArrowRight"]) {
+      sendSocketMessage(
+        JSON.stringify({ type: "move", data: { direction: "right" } }),
+      );
+    }
+  }, 50); // Adjust interval (ms) for responsiveness
+
+  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("keyup", handleKeyUp);
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+    window.removeEventListener("keyup", handleKeyUp);
+    clearInterval(movementInterval);
+  };
+}, [gameRunning, sendSocketMessage]);
 
   if (!gameId) {
     return (

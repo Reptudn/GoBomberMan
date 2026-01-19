@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import LobbyItem from "../components/LobbyItem";
 import { useNavigate } from "react-router-dom";
-
-const API_URL = "http://localhost:8080";
+import { API_URL } from "../App";
 
 export default function LobbyPage() {
   const [lobbies, setLobbies] = useState([]);

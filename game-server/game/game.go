@@ -42,6 +42,7 @@ func initializeGame(width, height int) {
 		player.Speed = 1.0
 		player.BombCount = 1
 		player.MaxBombCount = 2
+		player.TicksSinceLastMove = 0
 	}
 	fmt.Println("Game initialized.")
 }
@@ -172,8 +173,10 @@ func tickAllPlayers() {
 		}
 
 		// MOVEMENT
-		if !player.NextPos.Equal(player.Pos) {
+		player.TicksSinceLastMove++
+		if player.CanMove() && !player.NextPos.Equal(player.Pos) {
 			player.Pos = player.NextPos
+			player.TicksSinceLastMove = 0
 		}
 
 		// Player death handling and collect powerups

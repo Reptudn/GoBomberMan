@@ -26,14 +26,17 @@ func playersAsJSON() string {
 	return builder.String()
 }
 
+var defaultPlayerMoveDelay = 5
+
 type Player struct {
 	ID   int
 	Conn *websocket.Conn
 
 	Color string
 
-	Pos     Pos
-	NextPos Pos
+	Pos                Pos
+	NextPos            Pos
+	TicksSinceLastMove int
 
 	Alive bool
 	Speed float64
@@ -44,6 +47,13 @@ type Player struct {
 	WantsToPlaceBomb bool
 
 	WriteMutex sync.Mutex
+}
+
+func (p *Player) CanMove() bool {
+	if p.TicksSinceLastMove >= defaultPlayerMoveDelay {
+		return true
+	}
+	return false
 }
 
 func (p *Player) ToJSON() string {
