@@ -110,6 +110,8 @@ func handleClientMessage(player *shared.Player, message []byte) {
 }
 
 func sendMessageToClient(player *shared.Player, msgType string, message string) {
+	player.WriteMutex.Lock()
+	defer player.WriteMutex.Unlock()
 	msg := shared.BuildMessage(msgType, message)
 	err := player.Conn.WriteMessage(websocket.TextMessage, []byte(msg))
 	if err != nil {
