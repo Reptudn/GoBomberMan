@@ -40,7 +40,7 @@ func initializeGame(width, height int) {
 		player.Bomb = *player.GetBasicBomb()
 		player.Alive = true
 		player.Speed = 1.0
-		player.BombCount = 1
+		player.BombCount = 2
 		player.MaxBombCount = 2
 		player.TicksSinceLastMove = 0
 	}
@@ -193,7 +193,7 @@ func tickAllPlayers() {
 
 		// BOMB PLACEMENT
 		if player.WantsToPlaceBomb {
-			if player.BombCount < 0 {
+			if player.BombCount <= 0 {
 				player.BombCount = 0
 			}
 			if player.BombCount > 0 {
@@ -204,6 +204,7 @@ func tickAllPlayers() {
 		}
 
 		shared.Players[id] = player
+		fmt.Printf("%d has %d max bombs\n", id, player.MaxBombCount)
 	}
 }
 

@@ -48,15 +48,15 @@ export default function GameField({ fieldData = null, players = [], selfID = -1 
     if (String(type) === "4") return "💥";
     if (String(type) === "5") return "🔷";
 
-    if (String(type) === "6") return "🎲❓";
-    if (String(type) === "7") return "➕💣";
-    if (String(type) === "8") return "➖💣";
+    if (String(type) === "6") return "🎲";
+    if (String(type) === "7") return "➕";
+    if (String(type) === "8") return "➖";
     if (String(type) === "9") return "💣";
-    if (String(type) === "10") return "💣🧱➡️";
-    if (String(type) === "11") return "🔥⬆️";
-    if (String(type) === "12") return "🔥⬇️";
-    if (String(type) === "13") return "⚡⬆️";
-    if (String(type) === "14") return "🐌⬇️";
+    if (String(type) === "10") return "🧱";
+    if (String(type) === "11") return "🔥";
+    if (String(type) === "12") return "💧";
+    if (String(type) === "13") return "⚡";
+    if (String(type) === "14") return "🐌";
 
     // otherwise, nothing visible for empty/other types
     return "";

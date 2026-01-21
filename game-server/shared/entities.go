@@ -50,7 +50,7 @@ type Player struct {
 }
 
 func (p *Player) CanMove() bool {
-	return p.TicksSinceLastMove >= DefaultPlayerMoveDelay
+	return (float64)(p.TicksSinceLastMove) >= float64(DefaultPlayerMoveDelay)
 }
 
 func (p *Player) ToJSON() string {

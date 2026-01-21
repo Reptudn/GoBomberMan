@@ -20,11 +20,15 @@ func addSpeedEffect(player *Player) {
 }
 
 func addBombEffect(player *Player) {
+	player.MaxBombCount++
 	player.BombCount++
 }
 
 func removeBombEffect(player *Player) {
-	if player.BombCount-1 >= MinBombCount {
+	if player.MaxBombCount-1 >= MinBombCount {
+		player.MaxBombCount--
+	}
+	if player.BombCount > 0 {
 		player.BombCount--
 	}
 }
@@ -70,7 +74,7 @@ func getEffectFuncByType(powerupType CellType) func(*Player) {
 	case CellPowerUpAddStrenght:
 		return addStrenghtEffect
 	case CellPowerUpRemoveStrenght:
-		return removeBombEffect
+		return removeStrenghtEffect
 	case CellPowerUpAddSpeed:
 		return addSpeedEffect
 	case CellPowerUpRemoveSpeed:

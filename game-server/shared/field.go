@@ -89,6 +89,10 @@ func (f *Field) PlaceBomb(player *Player) {
 		return
 	}
 
+	if player.BombCount <= 0 {
+		return
+	}
+
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -265,7 +269,7 @@ func (f *Field) ExplodeBomb(bomb *Bomb, lockMutex bool) {
 
 	expandExplosion(bomb.Position.X, bomb.Position.Y, "", bomb.Strength)
 
-	if bomb.Owner != nil {
+	if bomb.Owner != nil && bomb.Owner.MaxBombCount > bomb.Owner.BombCount {
 		bomb.Owner.BombCount++
 	}
 	fmt.Printf("Bomb exploded by %d at position (%d, %d)\n", bomb.Owner.ID, bomb.Position.X, bomb.Position.Y)

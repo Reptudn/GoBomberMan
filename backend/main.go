@@ -68,6 +68,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	// TODO: change responses to JSONP https://echo.labstack.com/docs/cookbook/jsonp#server
 	e.GET("/ping", routes.Ping)
 
 	e.GET("/list-games", func(c echo.Context) error {

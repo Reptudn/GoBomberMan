@@ -83,52 +83,48 @@ function GamePage() {
 useEffect(() => {
   if (!gameRunning) return;
 
-  const keysPressed = {};
-
   const handleKeyDown = (e) => {
-    keysPressed[e.key] = true;
 
-    // Handle single actions (bomb placement)
-    if (e.key === " ") {
-      console.log("Placing bomb");
-      sendSocketMessage(JSON.stringify({ type: "place_bomb" }));
+    switch (e.key) {
+      case " ":
+        console.log("Placing bomb");
+        sendSocketMessage(JSON.stringify({ type: "place_bomb" }));
+        break;
+      case "ArrowUp":
+      case "w":
+        console.log("up")
+        sendSocketMessage(
+          JSON.stringify({ type: "move", data: { direction: "up" } }),
+        );
+        break;
+      case "ArrowDown":
+      case "s":
+        console.log("down")
+        sendSocketMessage(
+          JSON.stringify({ type: "move", data: { direction: "down" } }),
+        );
+        break;
+      case "ArrowLeft":
+      case "a":
+        console.log("left")
+        sendSocketMessage(
+          JSON.stringify({ type: "move", data: { direction: "left" } }),
+        );
+        break;
+      case "ArrowRight":
+      case "d":
+        console.log("right")
+        sendSocketMessage(
+          JSON.stringify({ type: "move", data: { direction: "right" } }),
+        );
     }
+
   };
-
-  const handleKeyUp = (e) => {
-    keysPressed[e.key] = false;
-  };
-
-  // Poll for held keys to send continuous movement updates
-  const movementInterval = setInterval(() => {
-    if (keysPressed["ArrowUp"]) {
-      sendSocketMessage(
-        JSON.stringify({ type: "move", data: { direction: "up" } }),
-      );
-    }
-    if (keysPressed["ArrowDown"]) {
-      sendSocketMessage(
-        JSON.stringify({ type: "move", data: { direction: "down" } }),
-      );
-    }
-    if (keysPressed["ArrowLeft"]) {
-      sendSocketMessage(
-        JSON.stringify({ type: "move", data: { direction: "left" } }),
-      );
-    }
-    if (keysPressed["ArrowRight"]) {
-      sendSocketMessage(
-        JSON.stringify({ type: "move", data: { direction: "right" } }),
-      );
-    }
-  }, 50); // Adjust interval (ms) for responsiveness
 
   window.addEventListener("keydown", handleKeyDown);
-  window.addEventListener("keyup", handleKeyUp);
 
   return () => {
     window.removeEventListener("keydown", handleKeyDown);
-    window.removeEventListener("keyup", handleKeyUp);
     clearInterval(movementInterval);
   };
 }, [gameRunning, sendSocketMessage]);

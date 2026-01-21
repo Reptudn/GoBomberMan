@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	corev1 "k8s.io/api/core/v1"
@@ -20,12 +19,12 @@ func CreateGame(c echo.Context, kubeClient kubernetes.Interface) error {
 	gameId := uuid.New().String()
 
 	if err := createGamePod(gameId, kubeClient); err != nil {
-		return c.JSON(500, gin.H{"status": "error creating game pod"})
+		return c.JSON(500, map[string]interface{}{"status": "error creating game pod"})
 	}
 
 	servicePort, err := createGameService(gameId, kubeClient)
 	if err != nil {
-		return c.JSON(500, gin.H{"status": "error creating game service"})
+		return c.JSON(500, map[string]interface{}{"status": "error creating game service"})
 	}
 
 	fmt.Printf("Game service created for game %s on port %d\n", gameId, servicePort)

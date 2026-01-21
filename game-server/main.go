@@ -41,6 +41,14 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func gameStatus(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, `{
+		'players': %d/%d,
+		'status': %d
+	}`, len(shared.Players), 4, game.CurrentGameState)
+}
+
 // TODO: Handle shutdown in a nice way
 var startTime time.Time
 
@@ -51,6 +59,7 @@ func main() {
 
 	http.HandleFunc("/ws", corsMiddleware(networking.HandleWebSocket))
 	http.HandleFunc("/health", corsMiddleware(handleHealthCheck))
+	http.HandleFunc("/status", corsMiddleware(gameStatus))
 
 	go func() {
 		time.Sleep(2 * time.Second)
