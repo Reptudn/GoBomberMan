@@ -5,6 +5,7 @@ import (
 	"math/rand"
 )
 
+// TODO: Make sure there are safe spawn point on the corners of the map all the time
 func GenerateClassic(width, height int, freePerc float64) *shared.Field {
 	field := &shared.Field{
 		Width:  width,
@@ -35,5 +36,5 @@ func GenerateClassic(width, height int, freePerc float64) *shared.Field {
 		}
 	}
 
-	return field
+	return makeSafeSpawns(field)
 }
