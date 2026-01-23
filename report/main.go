@@ -38,6 +38,7 @@ func main() {
 
 	e.GET("/games", routes.GetGames)
 	e.POST("/register", routes.RegisterGame)
+	e.POST("/update", routes.UpdateGame)
 	e.DELETE("/unregister", routes.UnregisterGame)
 
 	e.Logger.Fatal(e.Start(":8080"))

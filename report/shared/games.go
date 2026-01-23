@@ -57,6 +57,10 @@ func UpdateGame(uuid string, updatedData GameServer) error {
 	gamesMutex.Lock()
 	defer gamesMutex.Unlock()
 
+	if _, exists := Games[uuid]; !exists {
+		return fmt.Errorf("Game not registered!")
+	}
+
 	Games[uuid] = updatedData
 	return nil
 }

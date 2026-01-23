@@ -16,7 +16,7 @@ func RegisterGame(c echo.Context) error {
 	}
 
 	if err := shared.AddGame(newGame); err != nil {
-		return c.JSON(http.StatusFound, fmt.Sprintf("The Game with the uuid of %s has alreabdy been registered", newGame.UUID))
+		return c.JSON(http.StatusFound, err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, fmt.Sprintf("The Game with the UUID of %s has been registered successfully!", newGame.UUID))
