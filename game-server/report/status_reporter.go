@@ -12,9 +12,10 @@ import (
 )
 
 type StatusPayload struct {
-	GameID      string `json:"game_id"`
-	State       string `json:"state"`
-	PlayerCount int    `json:"player_count"`
+	GameID         string `json:"game_id"`
+	State          string `json:"state"`
+	PlayerCount    int    `json:"playerCount"`
+	MaxPlayerCount int    `json:"maxPlayerCount"`
 }
 
 type Reporter struct {
