@@ -2,7 +2,10 @@ package report
 
 import (
 	"bomberman-report-layer/routes"
+	"bomberman-report-layer/shared"
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -40,6 +43,22 @@ func main() {
 	e.POST("/register", routes.RegisterGame)
 	e.POST("/update", routes.UpdateGame)
 	e.DELETE("/unregister", routes.UnregisterGame)
+
+	// go routine to remove games that havnet updated for a while
+	deadTimer := time.NewTicker(10 * time.Second)
+	go func() {
+		defer deadTimer.Stop()
+
+		for range deadTimer.C {
+			for uuid, game := range shared.Games {
+				if time.Since(game.LastUpdateTime) < 30*time.Second {
+					if err := shared.RemoveGame(uuid); err != nil {
+						fmt.Println("Error occured whilst removing a game for not responding in a while.")
+					}
+				}
+			}
+		}
+	}()
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

@@ -36,6 +36,7 @@ func AddGame(newGame GameServer) error {
 		return fmt.Errorf("A Game with the UUID of %s has already been registered", newGame.UUID)
 	}
 
+	newGame.LastUpdateTime = time.Now()
 	Games[newGame.UUID] = newGame
 	return nil
 }
@@ -61,6 +62,7 @@ func UpdateGame(uuid string, updatedData GameServer) error {
 		return fmt.Errorf("Game not registered!")
 	}
 
+	updatedData.LastUpdateTime = time.Now()
 	Games[uuid] = updatedData
 	return nil
 }
