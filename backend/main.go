@@ -70,6 +70,7 @@ func main() {
 
 	// TODO: change responses to JSONP https://echo.labstack.com/docs/cookbook/jsonp#server
 	e.GET("/ping", routes.Ping)
+	e.RouteNotFound("/*", routes.RouteNotFound)
 
 	e.GET("/list-games", func(c echo.Context) error {
 		return routes.ListGames(c, kubeClient)

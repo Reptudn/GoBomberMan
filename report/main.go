@@ -1,4 +1,4 @@
-package report
+package main
 
 import (
 	"bomberman-report-layer/routes"
@@ -43,6 +43,7 @@ func main() {
 	e.POST("/register", routes.RegisterGame)
 	e.POST("/update", routes.UpdateGame)
 	e.DELETE("/unregister", routes.UnregisterGame)
+	e.RouteNotFound("/*", routes.RouteNotFound)
 
 	// go routine to remove games that havnet updated for a while
 	deadTimer := time.NewTicker(10 * time.Second)
@@ -60,5 +61,6 @@ func main() {
 		}
 	}()
 
-	e.Logger.Fatal(e.Start(":8080"))
+	fmt.Print("Report container starting.")
+	e.Logger.Fatal(e.Start(":8081"))
 }

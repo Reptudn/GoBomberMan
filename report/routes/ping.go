@@ -7,5 +7,5 @@ import (
 )
 
 func Ping(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Pong")
+	return c.JSON(http.StatusOK, "Pong from Report Service")
 }
