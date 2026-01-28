@@ -43,15 +43,18 @@ func main() {
 	e.POST("/register", routes.RegisterGame)
 	e.POST("/update", routes.UpdateGame)
 	e.DELETE("/unregister", routes.UnregisterGame)
-	e.RouteNotFound("/*", routes.RouteNotFound)
+	e.GET("/ping", routes.Ping)
+	// e.Any("/*", routes.RouteNotFound)
 
-	// go routine to remove games that havnet updated for a while
+	// go routine to remove games that havent updated for a while
 	deadTimer := time.NewTicker(10 * time.Second)
+
 	go func() {
 		defer deadTimer.Stop()
 
 		for range deadTimer.C {
 			for uuid, game := range shared.Games {
+				// game hasnt reponded in too long so it might've crashed or something so remove it from the arr
 				if time.Since(game.LastUpdateTime) < 30*time.Second {
 					if err := shared.RemoveGame(uuid); err != nil {
 						fmt.Println("Error occured whilst removing a game for not responding in a while.")
@@ -61,6 +64,6 @@ func main() {
 		}
 	}()
 
-	fmt.Print("Report container starting.")
+	fmt.Println("Report container starting.")
 	e.Logger.Fatal(e.Start(":8081"))
 }

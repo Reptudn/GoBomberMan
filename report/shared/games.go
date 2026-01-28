@@ -9,10 +9,10 @@ import (
 type GameState int
 
 const (
-	Starting = iota
-	Lobby
-	Running
-	Stopping
+	GameStateStarting = iota
+	GameStateLobby
+	GameStateRunning
+	GameStateStopping
 )
 
 type GameServer struct {
