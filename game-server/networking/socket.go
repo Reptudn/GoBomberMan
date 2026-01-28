@@ -3,6 +3,7 @@ package networking
 import (
 	"bomberman-game-server/game"
 	"bomberman-game-server/game/actions"
+	"bomberman-game-server/report"
 	"bomberman-game-server/shared"
 	"fmt"
 	"log"
@@ -72,6 +73,8 @@ func handleClientConnect(conn *websocket.Conn) *shared.Player {
 	nextClientID++
 	shared.PlayersMutex.Unlock()
 
+	report.TriggerManualStatusUpdate()
+
 	log.Printf("Client %d connected (total clients: %d)", player.ID, len(shared.Players))
 	return player
 }
@@ -88,6 +91,7 @@ func handleClientDisconnect(player *shared.Player) {
 	if len(shared.Players) == 0 {
 		game.CurrentGameState = game.GameStateFinished
 	}
+	report.TriggerManualStatusUpdate()
 }
 
 func handleClientMessage(player *shared.Player, message []byte) {

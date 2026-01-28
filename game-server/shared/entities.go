@@ -10,6 +10,7 @@ import (
 
 var PlayersMutex sync.RWMutex
 var Players = make(map[int]*Player)
+var MaxPlayers = 4
 
 func playersAsJSON() string {
 	var builder strings.Builder

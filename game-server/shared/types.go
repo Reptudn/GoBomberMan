@@ -1,6 +1,11 @@
 package shared
 
-import "strconv"
+import (
+	"strconv"
+	"sync"
+)
+
+var GlobalWaitGroup sync.WaitGroup
 
 type Pos struct {
 	X, Y int

@@ -4,6 +4,7 @@ import (
 	"bomberman-game-server/game/generation"
 	"bomberman-game-server/shared"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 )
@@ -20,6 +21,7 @@ const TicksPerSecond = 20
 
 var CurrentGameState GameState = GameStateWaiting
 var gameWasStarted bool = false
+var UUID = os.Getenv("UUID")
 
 func GetGameWasStarted() bool {
 	return gameWasStarted
@@ -80,10 +82,12 @@ func runGameLoop() {
 		fmt.Println("Game wasnt initialized yet.")
 		return
 	}
-	ticker := time.NewTicker(time.Second / TicksPerSecond)
 
+	ticker := time.NewTicker(time.Second / TicksPerSecond)
+	shared.GlobalWaitGroup.Add(1)
 	go func() {
 		defer ticker.Stop()
+		defer shared.GlobalWaitGroup.Done()
 
 		for range ticker.C {
 			if CurrentGameState == GameStateFinished {
